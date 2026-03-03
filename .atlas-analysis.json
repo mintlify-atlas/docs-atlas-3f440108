@@ -1,0 +1,92 @@
+{
+  "projectType": "ai-ml",
+  "projectName": "CivicHacks Demo",
+  "projectDescription": "Build civic AI applications with Ollama, LlamaIndex, and Gradio in 3 steps",
+  "theme": "palm",
+  "primaryColor": "#CC0000",
+  "lightColor": null,
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "installation"
+            ]
+          },
+          {
+            "group": "Tutorial Steps",
+            "pages": [
+              "tutorial/step1-local-ai",
+              "tutorial/step2-rag",
+              "tutorial/step3-web-app",
+              "tutorial/step4-byod",
+              "tutorial/step5-byod-app"
+            ]
+          },
+          {
+            "group": "Civic Data",
+            "pages": [
+              "data/overview",
+              "data/ecohack",
+              "data/cityhack",
+              "data/eduhack",
+              "data/justicehack"
+            ]
+          },
+          {
+            "group": "Customization",
+            "pages": [
+              "guides/swap-data",
+              "guides/change-model",
+              "guides/customize-ui"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "reference/architecture",
+              "reference/cost-estimator",
+              "reference/troubleshooting",
+              "reference/deployment"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Resources",
+        "groups": [
+          {
+            "group": "Additional Resources",
+            "pages": [
+              "resources/tools-frameworks",
+              "resources/civic-data-sources",
+              "resources/hackathon-tips"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Local AI inference with Ollama and Llama 3.1",
+    "RAG pipeline with LlamaIndex for civic data",
+    "Gradio web applications with chat interface",
+    "Bring Your Own Data (BYOD) functionality",
+    "Cost comparison tool (local vs cloud)",
+    "Four civic dataset tracks (environment, 311, education, justice)"
+  ],
+  "publicApiSurface": [
+    "demo_step1_ollama.py - Basic local AI inference",
+    "demo_step2_rag.py - RAG with civic data (tracks: eco, city, edu, justice)",
+    "demo_step3_app.py - Full Gradio web application",
+    "demo_step4_byod.py - Interactive BYOD terminal app",
+    "demo_step5_byod_app.py - BYOD web application",
+    "cost_estimator.py - Cost comparison utilities"
+  ]
+}
