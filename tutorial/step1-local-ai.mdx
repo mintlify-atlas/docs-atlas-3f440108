@@ -1,0 +1,198 @@
+---
+title: 'Step 1: Local AI with Ollama'
+description: 'Run a GPT-4-class model locally, for free, with no API key'
+---
+
+## Overview
+
+This step proves that you can run a GPT-4-class model locally, for free, with no API key. The script sends a civic-themed prompt to your local Ollama instance and streams the response token by token so you can watch the AI generate in real time.
+
+**Duration:** ~60 seconds
+
+**What you'll see:**
+- Live AI generation streaming to your terminal
+- Hostname and timestamp proving it's running locally
+- Elapsed time, tokens per second, and cost comparison
+- Actual electricity cost vs. what the same query would cost on cloud APIs like GPT-4o
+
+## Prerequisites
+
+<Steps>
+  <Step title="Install Ollama">
+    Download and install Ollama from [https://ollama.com](https://ollama.com)
+
+    <CodeGroup>
+    ```bash macOS (Homebrew)
+    brew install ollama
+    ```
+
+    ```bash Linux
+    curl -fsSL https://ollama.com/install.sh | sh
+    ```
+
+    ```bash Windows
+    # Download installer from https://ollama.com
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Pull the Llama 3.1 model">
+    This downloads ~4.7 GB, so use reliable WiFi.
+
+    ```bash
+    ollama pull llama3.1
+    ```
+
+    Verify it works:
+
+    ```bash
+    ollama run llama3.1 "Say hello in 10 words or less"
+    ```
+  </Step>
+
+  <Step title="Start Ollama service">
+    If Ollama isn't running as a background service, start it:
+
+    ```bash
+    ollama serve
+    ```
+  </Step>
+</Steps>
+
+## Running the demo
+
+### Basic usage
+
+```bash
+python scripts/demo_step1_ollama.py
+```
+
+### Show help
+
+```bash
+python scripts/demo_step1_ollama.py --help
+```
+
+## Expected output
+
+```
+🏛️  CivicHacks 2026 — Open Source AI, Running Locally
+
+📡 Model: llama3.1 (8B) — running on YOUR-HOSTNAME
+🕐 Time: February 21, 2026 at 10:15:23 AM
+🔒 Data: never leaves YOUR-HOSTNAME
+
+────────────────────────────────────────────────────────────
+
+💬 Prompt: You are a civic technology advisor. In 3 concise bullet points,
+explain why open source AI matters for building tools that serve
+communities — especially for students at a hackathon who want to
+make a real impact this weekend.
+
+────────────────────────────────────────────────────────────
+
+🤖 Response:
+
+[AI response streams here token by token]
+
+────────────────────────────────────────────────────────────
+⏱️  12.3s · 142 tokens · 11 tok/s
+⚡ Local: $0.000009 (0.051 Wh @ 15W) · GPT-4o: $0.0017 (189x more)
+────────────────────────────────────────────────────────────
+
+✅ That's it. Local AI. Private. And virtually free.
+```
+
+## How it works
+
+The script performs these steps:
+
+<Steps>
+  <Step title="Display machine identity">
+    Shows the live hostname (`platform.node()`) and current timestamp to prove the AI is running locally on your machine.
+  </Step>
+
+  <Step title="Stream the response">
+    Calls `ollama.chat()` with `stream=True` targeting the `llama3.1` model:
+
+    ```python
+    stream = ollama.chat(
+        model="llama3.1",
+        messages=[{"role": "user", "content": PROMPT}],
+        stream=True,
+    )
+
+    for chunk in stream:
+        content = chunk["message"]["content"]
+        print(content, end="", flush=True)
+    ```
+  </Step>
+
+  <Step title="Calculate cost comparison">
+    Extracts token counts from Ollama's final streaming chunk and calls `format_cost_comparison()` to show:
+    - Local electricity cost (watts × seconds / 3600 = Wh, then Wh × $/kWh)
+    - Cloud API pricing for the same query (GPT-4o, Claude, etc.)
+    - Cost multiplier showing how much more expensive cloud APIs are
+  </Step>
+</Steps>
+
+## The civic prompt
+
+The script uses this hardcoded prompt to make the demo relevant:
+
+```python
+PROMPT = """You are a civic technology advisor. In 3 concise bullet points,
+explain why open source AI matters for building tools that serve
+communities — especially for students at a hackathon who want to
+make a real impact this weekend."""
+```
+
+<Tip>
+  You can edit this prompt in `scripts/demo_step1_ollama.py` to match your event theme or focus area.
+</Tip>
+
+## Performance expectations
+
+| Hardware | Expected speed |
+|----------|----------------|
+| Apple Silicon (M1/M2/M3/M4) | 15-25 tokens/second |
+| Recent Intel/AMD CPU | 3-8 tokens/second |
+| Older CPU-only | 1-3 tokens/second |
+
+<Note>
+  First runs are slower because the model needs to load into memory. Run the script once before presenting to pre-warm everything.
+</Note>
+
+## Cost estimator module
+
+All demo scripts share `scripts/cost_estimator.py`, which provides:
+
+- **`detect_power_watts()`** — Auto-detects hardware wattage (Apple Silicon base/Pro/Max, x86 laptop, desktop GPU, etc.)
+- **`estimate_local_cost(duration, watts)`** — Calculates actual electricity cost
+- **`estimate_cloud_cost(input_tokens, output_tokens)`** — Looks up published per-token pricing for GPT-4o, Claude 3.5 Sonnet, Gemini 2.5 Flash, and others
+- **`format_cost_comparison()`** — Full one-line format for terminal output
+- **`format_cost_short()`** — Compact format for Gradio chat metadata
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Error: Ollama isn't responding">
+    Run `ollama serve` to start the daemon, then verify with `ollama list`.
+  </Accordion>
+
+  <Accordion title="Error: Model not found">
+    Run `ollama pull llama3.1` to download the model.
+  </Accordion>
+
+  <Accordion title="Error: Connection refused">
+    Ollama defaults to `localhost:11434`. Ensure no firewall is blocking it.
+  </Accordion>
+
+  <Accordion title="Response is very slow">
+    CPU-only machines run at 3-8 tokens/second. Close other applications to free RAM. Apple Silicon Macs are much faster (15-25 tokens/second).
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+Now that you've proven local AI works, move to [Step 2: RAG with Civic Data](/tutorial/step2-rag) to connect the AI to real civic datasets.

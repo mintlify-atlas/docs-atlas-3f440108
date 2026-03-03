@@ -1,0 +1,442 @@
+---
+title: 'Step 5: BYOD web application'
+description: 'Wrap the BYOD experience in a web UI with drag-and-drop file upload'
+---
+
+## Overview
+
+This step wraps the Bring Your Own Data (BYOD) experience in a Gradio web interface with drag-and-drop file upload. You get the same BYOD functionality as Step 4, but in a polished browser interface.
+
+**Duration:** ~2 minutes to launch
+
+**What you'll get:**
+- Drag-and-drop file upload or select from `userdata/` directory
+- Support for loading single or multiple files at once
+- File analysis metadata displayed in the UI
+- AI summary shown as the first chat message
+- Interactive Q&A chat with cost comparison
+
+## Prerequisites
+
+Complete [Step 4: Bring Your Own Data](/tutorial/step4-byod) first. All dependencies should already be installed.
+
+## Running the app
+
+### Basic usage
+
+```bash
+python scripts/demo_step5_byod_app.py
+```
+
+The app starts on `http://localhost:8861` and should open automatically in your default browser.
+
+<Note>
+  This uses port **8861** (different from Step 3's 7860) so you can run both apps simultaneously.
+</Note>
+
+### Command-line options
+
+```bash
+# Launch on default port 8861
+python scripts/demo_step5_byod_app.py
+
+# Launch on custom port
+python scripts/demo_step5_byod_app.py --port 8080
+
+# Use a different model
+python scripts/demo_step5_byod_app.py --model phi3:mini
+
+# Create a public URL for sharing
+python scripts/demo_step5_byod_app.py --share
+
+# Show all options
+python scripts/demo_step5_byod_app.py --help
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--port` | `8861` | HTTP port for the web UI |
+| `--model` | `llama3.1` | Ollama model to use |
+| `--share` | off | Create a temporary public URL via Gradio's tunneling service |
+
+## UI components
+
+The web app includes these interactive elements:
+
+### Header
+
+**Dynamic header** that updates when files are loaded, showing:
+- "CivicHacks BYOD AI Assistant" title
+- Loaded file names
+- Hostname and start time
+- Privacy note: "no cloud, no cost, no data leaving this machine"
+
+### File loading section
+
+Two tabs for loading files:
+
+**Upload Files tab:**
+- Drag-and-drop area for uploading `.txt`, `.pdf`, `.csv`, `.docx` files
+- Supports multiple files
+- "Load & Analyze" button
+
+**From userdata/ Directory tab:**
+- Checkbox list of files in `userdata/` directory
+- "Load Selected" button — load checked files
+- "Load ALL" button — load every file into a single index
+- "↻ Refresh" button — rescan the directory for new files
+
+### File analysis display
+
+Markdown display showing metadata for each loaded file:
+- File name (bold)
+- Type (Plain text, PDF document, CSV spreadsheet, Word document)
+- Size (KB or MB)
+- Modified date
+- Content: number of chunks and word count
+
+### Chat interface
+
+**Message-style chat** with:
+- First message: AI summary of the loaded files
+- User/assistant bubbles
+- Red Hat avatar for assistant responses
+- Cost comparison metadata on each response
+
+### Question input
+
+- Text field with placeholder: "Ask anything about your loaded data..."
+- "Ask" button (also supports Enter key)
+
+### Footer
+
+Shows the full open source stack and privacy information:
+- **Stack:** Ollama + LlamaIndex + Gradio
+- **Model:** [model name]
+- **Host:** [your hostname]
+- **Data Privacy:** 100% local
+- **Cost:** per-query estimate shown in each response
+
+## How it works
+
+The app uses these key components:
+
+<Steps>
+  <Step title="File discovery and validation">
+    - `find_userdata_files()` scans the `userdata/` directory for supported file types
+    - `validate_uploaded_file()` validates file path, extension, and size (returns error tuple instead of exiting)
+    - `analyze_file_metadata()` returns markdown string with file metadata for display
+  </Step>
+
+  <Step title="Load and index files">
+    The `load_and_index_files()` function:
+
+    ```python
+    def load_and_index_files(filepaths, progress=gr.Progress()):
+        progress(0.1, desc="Loading files...")
+
+        all_documents = []
+        for fp in filepaths:
+            docs = SimpleDirectoryReader(input_files=[str(fp)]).load_data()
+            all_documents.extend(docs)
+
+        progress(0.5, desc="Building vector index...")
+        index = VectorStoreIndex.from_documents(all_documents)
+
+        progress(0.7, desc="Generating AI summary...")
+        prompt = MULTI_SUMMARY_PROMPT if len(filepaths) > 1 else SUMMARY_PROMPT
+        response = query_engine.query(prompt)
+
+        progress(1.0, desc="Ready!")
+        return index, analysis_md, summary_with_meta
+    ```
+
+    Uses `gr.Progress()` for visual feedback during loading.
+  </Step>
+
+  <Step title="Query BYOD data">
+    The `query_byod_data()` function queries the index and appends the response with cost metadata to chat history:
+
+    ```python
+    def query_byod_data(question, history, index_state, loaded_files_state):
+        if index_state is None:
+            return history + [
+                {"role": "user", "content": question},
+                {"role": "assistant", "content": "Please load a file first..."},
+            ], ""
+
+        history = history + [{"role": "user", "content": question}]
+
+        query_engine = index_state.as_query_engine(similarity_top_k=3)
+        start = time.time()
+        response = query_engine.query(question)
+        elapsed = time.time() - start
+
+        answer = str(response)
+        cost_info = format_cost_short(elapsed, est_input_tokens, est_output_tokens)
+        answer += f"\n\n---\n*⏱️ {elapsed:.1f}s · 🤖 {MODEL_NAME} · 💰 {cost_info}*"
+
+        history = history + [{"role": "assistant", "content": answer}]
+        return history, ""
+    ```
+  </Step>
+
+  <Step title="Session state">
+    Uses `gr.State` to store per-session index and loaded file list:
+
+    ```python
+    with gr.Blocks(title="CivicHacks BYOD AI Assistant") as app:
+        # -- State --
+        index_state = gr.State(value=None)
+        loaded_files_state = gr.State(value=[])
+
+        # ... UI components ...
+
+        upload_btn.click(
+            fn=on_upload_files,
+            inputs=[file_upload, index_state, loaded_files_state],
+            outputs=[file_info, chatbot, index_state, loaded_files_state, header],
+        )
+    ```
+
+    This supports multiple concurrent browser sessions, each with its own index.
+  </Step>
+</Steps>
+
+## Workflow examples
+
+### Upload a single file
+
+<Steps>
+  <Step title="Go to Upload Files tab">
+    Drag and drop a PDF, DOCX, TXT, or CSV file into the upload area.
+  </Step>
+
+  <Step title="Click Load & Analyze">
+    Watch the progress indicator as it:
+    1. Loads the file
+    2. Builds the vector index
+    3. Generates an AI summary
+  </Step>
+
+  <Step title="Review the summary">
+    The AI summary appears as the first chat message, covering:
+    - What the document is about
+    - Key data points or findings
+    - Three suggested questions
+  </Step>
+
+  <Step title="Ask questions">
+    Type questions in the input field and click "Ask" or press Enter.
+
+    Each response includes:
+    - AI-generated answer grounded in your data
+    - Timing (elapsed seconds)
+    - Cost comparison (local electricity vs. cloud API)
+  </Step>
+</Steps>
+
+### Load multiple files from userdata/
+
+<Steps>
+  <Step title="Drop files into userdata/ directory">
+    ```bash
+    cp ~/Documents/*.pdf userdata/
+    ```
+  </Step>
+
+  <Step title="Go to From userdata/ Directory tab">
+    Click "↻ Refresh" to rescan the directory.
+  </Step>
+
+  <Step title="Select files">
+    Check the boxes next to the files you want to load.
+  </Step>
+
+  <Step title="Click Load Selected or Load ALL">
+    - **Load Selected:** Loads only checked files
+    - **Load ALL:** Loads every file in the directory
+
+    Watch the progress indicator as it builds a combined index.
+  </Step>
+
+  <Step title="Ask cross-document questions">
+    Now you can ask questions that span multiple files:
+    - "What changed between these reports?"
+    - "Which document discusses budget constraints?"
+    - "What themes appear across all the data?"
+  </Step>
+</Steps>
+
+## Progress indicators
+
+The app shows real-time progress during loading:
+
+```
+Loading files... 10%
+Loading report.pdf... 30%
+Building vector index... 50%
+Generating AI summary... 70%
+Ready! 100%
+```
+
+<Tip>
+  Progress indicators use Gradio's `gr.Progress()` API to provide visual feedback during long-running operations.
+</Tip>
+
+## Error handling
+
+The app gracefully handles errors:
+
+| Error | Behavior |
+|-------|----------|
+| Unsupported file type | Shows error message, doesn't load the file |
+| Empty file | Shows error message, doesn't load the file |
+| PDF with no text | Shows warning, skips the file |
+| File read error | Shows error message with details, skips the file |
+| No files selected | Shows prompt: "No files selected. Check the boxes..." |
+| Query before loading | Shows message: "Please load a file first..." |
+
+<Note>
+  Errors are shown in the File Analysis section (markdown display) and don't crash the app.
+</Note>
+
+## Session management
+
+Each browser session maintains its own state:
+- **Index:** Each session builds its own vector index
+- **Loaded files:** Each session tracks its own loaded files
+- **Chat history:** Each session has its own message history
+
+This means:
+- Multiple users can use the app simultaneously with different data
+- Refreshing the browser resets the session (clears index and chat)
+- Opening a new tab creates a new independent session
+
+## Customizing the theme
+
+The Gradio theme is set with:
+
+```python
+THEME = gr.themes.Soft(primary_hue="red", secondary_hue="slate")
+CSS = """
+    .header { text-align: center; margin-bottom: 1rem; }
+    .header h1 { color: #CC0000; margin-bottom: 0.25rem; }
+    .file-info { background: #f8f9fa; border-radius: 8px; padding: 1rem; }
+"""
+```
+
+Change `primary_hue` to customize the color scheme:
+
+<CodeGroup>
+```python Blue theme
+THEME = gr.themes.Soft(primary_hue="blue", secondary_hue="slate")
+```
+
+```python Green theme
+THEME = gr.themes.Soft(primary_hue="green", secondary_hue="slate")
+```
+</CodeGroup>
+
+## Deployment options
+
+### Local only (default)
+
+The app runs entirely on `localhost:8861`. No data ever leaves the machine.
+
+### Temporary public URL
+
+```bash
+python scripts/demo_step5_byod_app.py --share
+```
+
+Gradio provides a temporary public URL (valid ~72 hours) via tunneling.
+
+**Example output:**
+```
+Running on local URL:  http://127.0.0.1:8861
+Running on public URL: https://xyz789abc123.gradio.live
+
+This share link expires in 72 hours.
+```
+
+<Warning>
+  The public URL routes traffic through Gradio's servers, but your data and model still run locally. Only the UI is tunneled.
+</Warning>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Browser doesn't open automatically">
+    Navigate manually to `http://localhost:8861` in your browser.
+  </Accordion>
+
+  <Accordion title="Port already in use">
+    Kill the existing process or change the port:
+    ```bash
+    python scripts/demo_step5_byod_app.py --port 9000
+    ```
+  </Accordion>
+
+  <Accordion title="File upload doesn't work">
+    Ensure the file is one of the supported types: `.txt`, `.pdf`, `.csv`, `.docx`
+
+    Check the File Analysis section for specific error messages.
+  </Accordion>
+
+  <Accordion title="userdata/ files don't appear">
+    Click "↻ Refresh" to rescan the directory.
+
+    Ensure files have supported extensions and are in the `userdata/` directory (not a subdirectory).
+  </Accordion>
+
+  <Accordion title="Progress indicator stuck">
+    This may indicate:
+    - Very large file (>10 MB) — wait longer
+    - PDF with images — text extraction is slow
+    - Insufficient RAM — close other applications
+
+    Check the terminal output for error messages.
+  </Accordion>
+
+  <Accordion title="AI summary is generic">
+    The file may not have extracted meaningful text. Check the File Analysis section for word count.
+
+    For PDFs, ensure they're text-based (not scanned images).
+  </Accordion>
+</AccordionGroup>
+
+## Comparison: Step 4 vs Step 5
+
+| Feature | Step 4 (Terminal) | Step 5 (Web App) |
+|---------|-------------------|------------------|
+| Interface | Command-line REPL | Browser-based chat |
+| File loading | CLI argument or prompt | Drag-and-drop or directory |
+| Multiple files | `--all` flag | Checkboxes or "Load ALL" |
+| File discovery | Auto-discovery | Auto-discovery + refresh |
+| Progress feedback | Terminal output | Progress bar |
+| Session persistence | Single session | Multiple concurrent sessions |
+| Sharing | Screen share only | Public URL via `--share` |
+| Best for | Quick analysis, demos | Collaboration, presentations |
+
+## Next steps
+
+You've completed all 5 tutorial steps! Now you can:
+
+<CardGroup cols={2}>
+  <Card title="Deploy to production" icon="rocket" href="/deployment/overview">
+    Learn how to deploy your app to Hugging Face Spaces, Streamlit Cloud, or your own server.
+  </Card>
+
+  <Card title="Customize the stack" icon="wrench" href="/customization/models">
+    Swap models, change themes, add new data sources, and more.
+  </Card>
+
+  <Card title="Explore advanced features" icon="code" href="/advanced/vector-stores">
+    Add persistent vector stores, multi-agent workflows, and advanced RAG techniques.
+  </Card>
+
+  <Card title="Join the community" icon="users" href="https://github.com/YOUR_USERNAME/civichacks-demo">
+    Share your project, get help, and contribute back.
+  </Card>
+</CardGroup>

@@ -1,0 +1,527 @@
+---
+title: Troubleshooting
+description: Common issues and solutions for the CivicHacks Demo
+---
+
+## Ollama issues
+
+### Ollama isn't responding
+
+**Symptoms:**
+- "Connection refused" errors
+- Scripts hang when trying to connect
+- No response from `ollama list`
+
+**Solutions:**
+
+<AccordionGroup>
+  <Accordion title="Check if Ollama is running">
+    ```bash
+    # Test if Ollama is running
+    ollama list
+    
+    # If you see your models, Ollama is running
+    # If you get an error, start the service:
+    ollama serve
+    ```
+  </Accordion>
+
+  <Accordion title="Verify the model is downloaded">
+    ```bash
+    # List downloaded models
+    ollama list
+    
+    # If llama3.1 is missing, download it:
+    ollama pull llama3.1
+    ```
+  </Accordion>
+
+  <Accordion title="Check firewall settings">
+    Ollama defaults to `localhost:11434`. Ensure no firewall is blocking this port.
+    
+    ```bash
+    # Test the connection
+    curl http://localhost:11434/api/tags
+    ```
+  </Accordion>
+</AccordionGroup>
+
+<Warning>
+Ollama must be running BEFORE you start any demo script. Run `ollama serve` in a separate terminal if it's not running as a background service.
+</Warning>
+
+### Model not found error
+
+**Error message:**
+```
+Error: model 'llama3.1' not found
+```
+
+**Solution:**
+
+```bash
+# Download the model
+ollama pull llama3.1
+
+# Verify it's available
+ollama list
+```
+
+### Connection refused on macOS
+
+**Symptoms:**
+- Ollama works in terminal but not in Python scripts
+- "Connection refused to localhost:11434"
+
+**Solution:**
+
+Ollama might not be running as a service. Start it manually:
+
+```bash
+# Terminal 1: Start Ollama
+ollama serve
+
+# Terminal 2: Run your demo script
+python scripts/demo_step1_ollama.py
+```
+
+## Performance issues
+
+### Very slow generation (< 3 tokens/sec)
+
+**Symptoms:**
+- Responses take minutes to generate
+- High CPU usage
+- System feels sluggish
+
+**Solutions:**
+
+<AccordionGroup>
+  <Accordion title="Close other applications">
+    Llama 3.1 8B uses 4-5 GB of RAM. Close unnecessary applications to free memory:
+    
+    - Web browsers with many tabs
+    - Electron apps (Slack, Discord, VS Code)
+    - Video conferencing apps
+    - Other LLM tools
+  </Accordion>
+
+  <Accordion title="Switch to a smaller model">
+    Try a smaller, faster model:
+    
+    ```bash
+    # Download a smaller model
+    ollama pull llama3.2:3b
+    
+    # Update the model in your scripts:
+    # Settings.llm = Ollama(model="llama3.2:3b")
+    ```
+  </Accordion>
+
+  <Accordion title="Check CPU vs GPU inference">
+    On Apple Silicon, check Activity Monitor:
+    
+    - Look for "ollama" process
+    - If "CPU" is high but "GPU" is low, the model might not be using the Neural Engine
+    - Restart Ollama: `killall ollama && ollama serve`
+  </Accordion>
+</AccordionGroup>
+
+<Info>
+CPU-only inference for 8B models typically runs at 3-8 tokens/second. This is normal and still works for live demos since the audience can see it generating in real-time.
+</Info>
+
+### Index building is slow (> 30 seconds)
+
+**Symptoms:**
+- Step 2 hangs during "Building vector index..."
+- First run takes much longer than subsequent runs
+
+**Solutions:**
+
+<AccordionGroup>
+  <Accordion title="First run: Embedding model download">
+    The HuggingFace embedding model (`all-MiniLM-L6-v2`) downloads on first use (~80 MB).
+    
+    **Fix:** Run Step 2 once before your live demo to cache the model:
+    
+    ```bash
+    python scripts/demo_step2_rag.py city
+    ```
+    
+    Subsequent runs will use the cached model from `~/.cache/huggingface/hub/`.
+  </Accordion>
+
+  <Accordion title="Check internet connection">
+    If the download is stuck, verify your internet connection:
+    
+    ```bash
+    # Test HuggingFace connectivity
+    curl -I https://huggingface.co
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### App is unresponsive
+
+**Symptoms:**
+- Gradio app loads but doesn't respond to queries
+- Browser shows loading spinner indefinitely
+- Terminal shows no error messages
+
+**Solutions:**
+
+<AccordionGroup>
+  <Accordion title="Check available RAM">
+    Ensure at least 8 GB RAM is available:
+    
+    **macOS:**
+    ```bash
+    # Check memory pressure
+    vm_stat | grep "Pages free"
+    ```
+    
+    **Linux:**
+    ```bash
+    free -h
+    ```
+  </Accordion>
+
+  <Accordion title="Increase request timeout">
+    Edit the timeout in your script:
+    
+    ```python
+    Settings.llm = Ollama(
+        model="llama3.1",
+        request_timeout=300.0  # Increase from 120 to 300 seconds
+    )
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Gradio issues
+
+### Browser doesn't open automatically
+
+**Symptoms:**
+- Script starts but browser doesn't launch
+- Terminal shows "Running on local URL: http://localhost:7860"
+
+**Solutions:**
+
+<AccordionGroup>
+  <Accordion title="Open manually">
+    Navigate to the URL shown in the terminal:
+    
+    ```
+    http://localhost:7860
+    ```
+  </Accordion>
+
+  <Accordion title="Specify browser">
+    Set the `BROWSER` environment variable:
+    
+    ```bash
+    # macOS/Linux
+    BROWSER=chrome python scripts/demo_step3_app.py
+    
+    # Or Firefox
+    BROWSER=firefox python scripts/demo_step3_app.py
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Port already in use
+
+**Error message:**
+```
+OSError: [Errno 48] Address already in use
+```
+
+**Solutions:**
+
+<AccordionGroup>
+  <Accordion title="Kill the existing process">
+    ```bash
+    # Find the process using port 7860
+    lsof -ti:7860 | xargs kill -9
+    
+    # Or for port 8861 (Step 5)
+    lsof -ti:8861 | xargs kill -9
+    ```
+  </Accordion>
+
+  <Accordion title="Use a different port">
+    ```bash
+    # Run on custom port
+    python scripts/demo_step3_app.py --port 8080
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Share link doesn't work
+
+**Symptoms:**
+- `--share` flag creates a URL but it's not accessible
+- "Could not create share link" error
+
+**Solutions:**
+
+<AccordionGroup>
+  <Accordion title="Check internet connection">
+    Gradio share requires internet to create the tunnel:
+    
+    ```bash
+    # Test connectivity
+    curl -I https://gradio.app
+    ```
+  </Accordion>
+
+  <Accordion title="Firewall blocking tunnel">
+    Some networks block Gradio's tunneling service. Try:
+    
+    1. Use a different network (mobile hotspot)
+    2. Deploy to Hugging Face Spaces instead
+  </Accordion>
+</AccordionGroup>
+
+## Embedding model issues
+
+### Download hangs or fails
+
+**Symptoms:**
+- Step 2 hangs at "Building vector index..."
+- "ConnectionError" or "TimeoutError"
+
+**Solutions:**
+
+<AccordionGroup>
+  <Accordion title="Check internet connection">
+    The embedding model downloads from HuggingFace (~80 MB):
+    
+    ```bash
+    # Test HuggingFace connectivity
+    curl -I https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
+    ```
+  </Accordion>
+
+  <Accordion title="Retry with better network">
+    If at a hackathon with slow wifi, try:
+    
+    1. Move closer to the router
+    2. Use a wired connection
+    3. Pair with someone who already has the model cached
+    4. Copy their `~/.cache/huggingface/` directory
+  </Accordion>
+
+  <Accordion title="Clear cache and retry">
+    ```bash
+    # Remove corrupted downloads
+    rm -rf ~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2
+    
+    # Retry
+    python scripts/demo_step2_rag.py city
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### "No module named 'sentence_transformers'"
+
+**Solution:**
+
+Reinstall dependencies:
+
+```bash
+pip install --upgrade llama-index-embeddings-huggingface
+```
+
+### Cached model location
+
+The embedding model is cached at:
+
+```
+~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/
+```
+
+You can copy this directory to another machine to avoid re-downloading.
+
+## Python dependency issues
+
+### Import errors
+
+**Error message:**
+```
+ModuleNotFoundError: No module named 'llama_index'
+```
+
+**Solution:**
+
+Ensure you're in the virtual environment and dependencies are installed:
+
+```bash
+# Activate virtual environment
+source .venv/bin/activate    # macOS/Linux
+.venv\Scripts\activate       # Windows
+
+# Reinstall dependencies
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### Version conflicts
+
+**Symptoms:**
+- "Incompatible version" warnings
+- Scripts fail with attribute errors
+
+**Solution:**
+
+```bash
+# Create fresh virtual environment
+rm -rf .venv
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install clean dependencies
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+## BYOD (Bring Your Own Data) issues
+
+### File not found
+
+**Error message:**
+```
+Error: File not found at path/to/file.txt
+```
+
+**Solutions:**
+
+<AccordionGroup>
+  <Accordion title="Check file path">
+    Use absolute paths or relative paths from the project root:
+    
+    ```bash
+    # Absolute path
+    python scripts/demo_step4_byod.py ~/Downloads/report.pdf
+    
+    # Relative to project root
+    python scripts/demo_step4_byod.py userdata/myfile.txt
+    ```
+  </Accordion>
+
+  <Accordion title="Remove drag-and-drop quotes">
+    If you dragged a file into the terminal, remove the quotes:
+    
+    ```bash
+    # Wrong (with quotes)
+    python scripts/demo_step4_byod.py "~/Downloads/my file.txt"
+    
+    # Right (script handles spaces)
+    python scripts/demo_step4_byod.py ~/Downloads/my\ file.txt
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Unsupported file type
+
+**Error message:**
+```
+Error: Unsupported file type: .xlsx
+```
+
+**Supported formats:**
+- `.txt` (plain text)
+- `.pdf` (requires `llama-index-readers-file`)
+- `.csv` (comma-separated values)
+- `.docx` (Word documents)
+
+**Solution for Excel files:**
+
+Convert to CSV first:
+
+```bash
+# In Excel: File > Save As > CSV
+# Then use the CSV file
+python scripts/demo_step4_byod.py data.csv
+```
+
+### PDF parsing fails
+
+**Symptoms:**
+- Empty or garbled text from PDFs
+- "No content found" errors
+
+**Solutions:**
+
+<AccordionGroup>
+  <Accordion title="Check PDF type">
+    LlamaIndex works best with text-based PDFs. Image-based PDFs (scanned documents) require OCR.
+    
+    **Test:** Try copying text from the PDF. If you can't select text, it's image-based.
+  </Accordion>
+
+  <Accordion title="Install additional readers">
+    ```bash
+    pip install llama-index-readers-file
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Live demo backup plan
+
+<Warning>
+Always have a backup plan for live demos. Hardware and wifi can fail.
+</Warning>
+
+### Pre-record a screen capture
+
+Before the event:
+
+1. Record the full demo flow using screen recording software
+2. Record at the venue so the environment looks authentic
+3. Include terminal commands, browser interactions, and real responses
+4. Keep the video file ready to play if needed
+
+### Pre-warm checklist
+
+Run these commands before going on stage:
+
+```bash
+# 1. Verify Ollama is running
+ollama list
+
+# 2. Test Step 1
+python scripts/demo_step1_ollama.py
+
+# 3. Pre-warm Step 2 (all tracks)
+python scripts/demo_step2_rag.py eco
+python scripts/demo_step2_rag.py city
+python scripts/demo_step2_rag.py edu
+python scripts/demo_step2_rag.py justice
+
+# 4. Test Step 3 app loads
+python scripts/demo_step3_app.py
+# Open browser, verify it works, then Ctrl+C
+
+# 5. Close all other applications
+# 6. Set terminal font size large enough for back row
+```
+
+## Getting help
+
+If you're still stuck:
+
+1. Check the [architecture overview](/reference/architecture) to understand how components connect
+2. Review the [deployment options](/reference/deployment) if you're trying to host remotely
+3. Open an issue on GitHub with:
+   - Your OS and Python version
+   - Full error message
+   - Steps to reproduce
+
+## Related resources
+
+- [System architecture](/reference/architecture)
+- [Cost estimator module](/reference/cost-estimator)
+- [Deployment options](/reference/deployment)

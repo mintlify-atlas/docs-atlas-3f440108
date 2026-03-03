@@ -1,0 +1,318 @@
+---
+title: Cost estimation module
+description: Real-time cost comparison between local inference and cloud APIs
+---
+
+## Overview
+
+The `cost_estimator.py` module calculates the actual electricity cost of local LLM inference and compares it to published cloud API pricing. It's used by all demo scripts to show cost savings in real-time.
+
+Location: `scripts/cost_estimator.py`
+
+## Key functions
+
+### `detect_power_watts()`
+
+Auto-detects hardware wattage based on your system.
+
+```python
+def detect_power_watts():
+    """Auto-detect a reasonable wattage estimate based on hardware."""
+    # Returns (watts, label) tuple
+```
+
+**Detection logic:**
+
+<AccordionGroup>
+  <Accordion title="Apple Silicon detection">
+    Checks `platform.machine()` for ARM architecture, then uses `sysctl` to read the CPU brand string:
+    
+    - If "max" or "ultra" in brand → 50W (M_-Max chips)
+    - If "pro" in brand → 35W (M_-Pro chips)
+    - Otherwise → 15W (M1/M2/M3/M4 base)
+  </Accordion>
+
+  <Accordion title="x86 detection">
+    Defaults to laptop profile:
+    
+    - x86 laptop (CPU-only) → 45W
+    - Desktop profiles available but not auto-detected
+  </Accordion>
+</AccordionGroup>
+
+**Power profiles (watts during inference):**
+
+```python
+POWER_PROFILES = {
+    "apple_base":  15,   # M1/M2/M3/M4 base (MacBook Air / 13" Pro)
+    "apple_pro":   35,   # M_-Pro chips (14"/16" MacBook Pro)
+    "apple_max":   50,   # M_-Max chips
+    "laptop_cpu":  45,   # x86 laptop, CPU-only inference
+    "desktop_cpu": 120,  # x86 desktop, CPU-only inference
+    "desktop_gpu": 250,  # Desktop with discrete GPU (RTX 3060-4090)
+}
+```
+
+<Info>
+These are conservative whole-system estimates including screen, SSD, and RAM during inference.
+</Info>
+
+### `estimate_local_cost(duration_secs, watts=None)`
+
+Calculates the electricity cost of a local inference run.
+
+```python
+def estimate_local_cost(duration_secs, watts=None):
+    """
+    Estimate the electricity cost of a local inference run.
+    
+    Args:
+        duration_secs: Wall-clock seconds of generation
+        watts: System power draw in watts (auto-detected if None)
+    
+    Returns:
+        dict with energy_wh, cost_usd, watts, label
+    """
+```
+
+**Calculation:**
+
+```python
+# Convert to watt-hours
+energy_wh = watts * duration_secs / 3600
+
+# Convert to cost
+cost_usd = (energy_wh / 1000) * ELECTRICITY_RATE  # Wh → kWh → $
+```
+
+**Electricity rate:**
+
+```python
+ELECTRICITY_RATE = 0.18  # US average ($/kWh), EIA Feb 2026
+```
+
+### `estimate_cloud_cost(input_tokens, output_tokens, model="GPT-4o")`
+
+Calculates what a cloud API would charge for the same query.
+
+```python
+def estimate_cloud_cost(input_tokens, output_tokens, model="GPT-4o"):
+    """
+    Estimate what a cloud API would charge for the same query.
+    
+    Args:
+        input_tokens: Number of prompt/input tokens
+        output_tokens: Number of generated output tokens
+        model: Cloud model name (key in CLOUD_PRICING)
+    
+    Returns:
+        dict with cost_usd, model
+    """
+```
+
+**Cloud pricing (per 1M tokens, early 2026):**
+
+```python
+CLOUD_PRICING = {
+    "GPT-4o":              (2.50,  10.00),  # (input, output)
+    "GPT-4o-mini":         (0.15,   0.60),
+    "Claude 3.5 Sonnet":   (3.00,  15.00),
+    "Claude 3.5 Haiku":    (0.80,   4.00),
+    "Gemini 2.5 Flash":    (0.15,   0.60),
+    "Groq Llama 3.1 8B":   (0.05,   0.08),
+}
+```
+
+**Calculation:**
+
+```python
+input_rate, output_rate = CLOUD_PRICING[model]
+cost = (input_tokens / 1_000_000) * input_rate + \
+       (output_tokens / 1_000_000) * output_rate
+```
+
+### `format_cost_comparison(duration_secs, input_tokens, output_tokens, watts=None)`
+
+Formats a one-line cost comparison for terminal output.
+
+```python
+def format_cost_comparison(duration_secs, input_tokens, output_tokens, watts=None):
+    """
+    Build a formatted cost comparison string for display.
+    
+    Returns:
+        One-line summary like:
+        ⚡ Local: $0.000008 (0.05 Wh @ 15W) · GPT-4o: $0.0017 (189x more)
+    """
+```
+
+**Example output:**
+
+```
+⚡ Local: $0.000009 (0.051 Wh @ 15W) · GPT-4o: $0.0017 (189x more)
+```
+
+### `format_cost_short(duration_secs, input_tokens, output_tokens, watts=None)`
+
+Shorter format for inline display (e.g., Gradio chat metadata).
+
+```python
+def format_cost_short(duration_secs, input_tokens, output_tokens, watts=None):
+    """
+    Shorter format for inline display.
+    
+    Returns:
+        $0.000008 local · $0.0021 on GPT-4o (265x)
+    """
+```
+
+**Example output:**
+
+```
+$0.000008 local · $0.0021 on GPT-4o (265x)
+```
+
+## Usage examples
+
+<AccordionGroup>
+  <Accordion title="Step 1: Terminal output (demo_step1_ollama.py)">
+    ```python
+    from cost_estimator import format_cost_comparison
+    import time
+    
+    start = time.time()
+    
+    # Run inference...
+    stream = ollama.chat(
+        model="llama3.1",
+        messages=[{"role": "user", "content": prompt}],
+        stream=True,
+    )
+    
+    for chunk in stream:
+        print(chunk["message"]["content"], end="", flush=True)
+    
+    elapsed = time.time() - start
+    
+    # Get token counts from Ollama
+    input_tokens = chunk.get("prompt_eval_count", 0)
+    output_tokens = chunk.get("eval_count", 0)
+    
+    # Display cost comparison
+    cost_line = format_cost_comparison(elapsed, input_tokens, output_tokens)
+    print(f"\n{cost_line}")
+    ```
+  </Accordion>
+
+  <Accordion title="Step 3: Gradio chat metadata (demo_step3_app.py)">
+    ```python
+    from cost_estimator import format_cost_short
+    import time
+    
+    def query_civic_data(question, track_name, history):
+        start = time.time()
+        
+        # Query the index...
+        response = query_engine.query(question)
+        
+        elapsed = time.time() - start
+        
+        # Extract token counts (if available)
+        input_tokens = getattr(response, "prompt_tokens", 0)
+        output_tokens = getattr(response, "completion_tokens", 0)
+        
+        # Format cost metadata
+        cost_meta = format_cost_short(elapsed, input_tokens, output_tokens)
+        
+        # Append to chat history
+        history.append({
+            "role": "user",
+            "content": question
+        })
+        history.append({
+            "role": "assistant",
+            "content": f"{response.response}\n\n---\n{cost_meta}"
+        })
+        
+        return history
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Real-world cost examples
+
+<Tip>
+These examples use a 15W Apple Silicon base chip and typical query sizes.
+</Tip>
+
+### Short query (50 input tokens, 100 output tokens, 8 seconds)
+
+| Metric | Value |
+|--------|-------|
+| Local energy | 0.033 Wh |
+| Local cost | $0.000006 |
+| GPT-4o cost | $0.0011 |
+| **Savings ratio** | **183x** |
+
+### Medium query (200 input tokens, 300 output tokens, 25 seconds)
+
+| Metric | Value |
+|--------|-------|
+| Local energy | 0.104 Wh |
+| Local cost | $0.000019 |
+| GPT-4o cost | $0.0035 |
+| **Savings ratio** | **184x** |
+
+### Long query (500 input tokens, 800 output tokens, 60 seconds)
+
+| Metric | Value |
+|--------|-------|
+| Local energy | 0.250 Wh |
+| Local cost | $0.000045 |
+| GPT-4o cost | $0.0093 |
+| **Savings ratio** | **207x** |
+
+<Warning>
+These are estimates. Actual costs vary based on your hardware, electricity rate, and query size.
+</Warning>
+
+## Customization
+
+### Change the electricity rate
+
+Edit the constant in `scripts/cost_estimator.py`:
+
+```python
+# Your local rate ($/kWh)
+ELECTRICITY_RATE = 0.18  # Update this
+```
+
+### Add new cloud models
+
+Add entries to the `CLOUD_PRICING` dictionary:
+
+```python
+CLOUD_PRICING = {
+    # Existing models...
+    "Your Model": (input_rate_per_1M, output_rate_per_1M),
+}
+```
+
+### Override power detection
+
+Pass `watts` explicitly to any function:
+
+```python
+# Use manual wattage instead of auto-detection
+cost_line = format_cost_comparison(
+    duration_secs=10,
+    input_tokens=100,
+    output_tokens=200,
+    watts=25  # Override
+)
+```
+
+## Related resources
+
+- [System architecture](/reference/architecture)
+- [Troubleshooting guide](/reference/troubleshooting)

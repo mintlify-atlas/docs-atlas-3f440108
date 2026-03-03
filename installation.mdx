@@ -1,0 +1,479 @@
+---
+title: Installation
+description: Detailed installation instructions and system requirements
+---
+
+## System requirements
+
+Before you begin, verify your system meets these requirements:
+
+| Component | Minimum | Recommended |
+|-----------|---------|-------------|
+| RAM | 8 GB | 16 GB |
+| GPU VRAM | Not required (CPU works) | 8+ GB (much faster) |
+| Storage | 10 GB free | 20 GB free |
+| CPU | Any modern 4-core | Apple Silicon or recent Intel/AMD |
+| Python | 3.10+ | 3.12+ |
+
+<Note>
+  **Apple Silicon Macs** (M1/M2/M3/M4) are ideal—the unified memory architecture handles Llama 3.1 8B beautifully at 15-25 tokens/second.
+</Note>
+
+<Warning>
+  **No GPU?** It still works on CPU, just slower (~3-5 tokens/second). For live demos, this is actually fine—the audience can see it generating in real time.
+</Warning>
+
+## Installation steps
+
+<Steps>
+
+<Step title="Install Ollama">
+  Ollama is the local LLM runtime that hosts models on your machine.
+
+  ### macOS
+
+  <CodeGroup>
+  ```bash Homebrew
+  brew install ollama
+  ```
+
+  ```bash Direct download
+  # Download from https://ollama.com
+  ```
+  </CodeGroup>
+
+  ### Linux
+
+  ```bash
+  curl -fsSL https://ollama.com/install.sh | sh
+  ```
+
+  ### Windows
+
+  Download the installer from [ollama.com](https://ollama.com)
+
+  <Note>
+    Ollama runs as a background service after installation. If it's not running, start it with `ollama serve`.
+  </Note>
+</Step>
+
+<Step title="Pull the Llama 3.1 model">
+  Download the model (this is a one-time download of ~4.7 GB):
+
+  ```bash
+  ollama pull llama3.1
+  ```
+
+  Verify it works:
+
+  ```bash
+  ollama run llama3.1 "Say hello in 10 words or less"
+  ```
+
+  You should see the model generate a brief greeting.
+
+  <Warning>
+    **Do this on reliable wifi BEFORE the event.** The model is ~4.7 GB. Once downloaded, it runs offline forever.
+  </Warning>
+</Step>
+
+<Step title="Clone the repository">
+  Get the demo code:
+
+  ```bash
+  git clone https://github.com/holzerjm/civichacks-demo.git
+  cd civichacks-demo
+  ```
+</Step>
+
+<Step title="Set up Python virtual environment">
+  Create an isolated Python environment:
+
+  <CodeGroup>
+  ```bash macOS / Linux
+  python3 -m venv .venv
+  source .venv/bin/activate
+  ```
+
+  ```bash Windows
+  python3 -m venv .venv
+  .venv\Scripts\activate
+  ```
+  </CodeGroup>
+
+  <Note>
+    You'll need to activate the virtual environment every time you open a new terminal session.
+  </Note>
+</Step>
+
+<Step title="Install Python dependencies">
+  Upgrade pip and install all required packages:
+
+  ```bash
+  pip install --upgrade pip
+  pip install -r requirements.txt
+  ```
+
+  This installs five packages:
+
+  | Package | Version | Purpose |
+  |---------|---------|----------|
+  | `llama-index` | >=0.12.0 | Core RAG framework for connecting AI to data |
+  | `llama-index-llms-ollama` | >=0.5.0 | Ollama integration for local LLM inference |
+  | `llama-index-embeddings-huggingface` | >=0.5.0 | Local embedding model (no API key needed) |
+  | `llama-index-readers-file` | >=0.5.0 | File readers for PDF, DOCX, and other formats |
+  | `gradio` | >=5.0.0 | Web UI framework for building the chat interface |
+</Step>
+
+<Step title="Pre-warm everything (critical for live demos)">
+  First runs are slower because models need to load into memory and the embedding model (~80 MB) downloads on first use.
+
+  Run each step once before presenting:
+
+  ```bash
+  # Pre-warm Step 1
+  python scripts/demo_step1_ollama.py
+
+  # Pre-warm Step 2 (each track)
+  python scripts/demo_step2_rag.py eco
+  python scripts/demo_step2_rag.py city
+  python scripts/demo_step2_rag.py edu
+  python scripts/demo_step2_rag.py justice
+
+  # Pre-warm Step 3 (start it, verify it loads, then Ctrl+C)
+  python scripts/demo_step3_app.py
+  ```
+
+  <Warning>
+    The HuggingFace embedding model (`all-MiniLM-L6-v2`, ~80 MB) downloads on first use. Running Step 2 once will cache it to `~/.cache/huggingface/hub/`.
+  </Warning>
+</Step>
+
+</Steps>
+
+## Verify installation
+
+Run these checks to ensure everything is working:
+
+### Check Ollama is running
+
+```bash
+ollama list
+```
+
+You should see `llama3.1` in the list.
+
+### Check Python packages
+
+```bash
+pip list | grep llama-index
+pip list | grep gradio
+```
+
+You should see all five packages installed.
+
+### Run a quick test
+
+```bash
+python scripts/demo_step1_ollama.py
+```
+
+If you see the AI generate a response with cost comparison, you're all set!
+
+## Project structure
+
+After cloning, your directory will look like this:
+
+```
+civichacks-demo/
+├── README.md                             # Project overview and demo flow
+├── USER_GUIDE.md                         # Comprehensive guide
+├── requirements.txt                      # Python dependencies
+├── data/                                 # Civic datasets (one per track)
+│   ├── ecohack_boston_environment.txt     # Boston environmental quality data
+│   ├── cityhack_boston_311.txt            # Boston 311 service request data
+│   ├── eduhack_boston_schools.txt         # Boston public schools equity data
+│   └── justicehack_ma_justice.txt        # MA criminal justice reform data
+├── userdata/                             # Drop your own files here for Step 4
+└── scripts/                              # Demo scripts (run in order)
+    ├── cost_estimator.py                 # Shared: local vs. cloud cost comparison
+    ├── demo_step1_ollama.py              # Step 1: Basic local AI inference
+    ├── demo_step2_rag.py                 # Step 2: RAG with civic data
+    ├── demo_step3_app.py                 # Step 3: Full Gradio web app
+    ├── demo_step4_byod.py               # Step 4: Bring Your Own Data (interactive)
+    └── demo_step5_byod_app.py           # Step 5: BYOD Web Application (Gradio)
+```
+
+## Understanding the dependencies
+
+### llama-index
+
+The core RAG (Retrieval Augmented Generation) framework. Handles:
+- Loading and chunking documents
+- Building vector indexes
+- Retrieving relevant context for queries
+- Orchestrating LLM + data pipelines
+
+### llama-index-llms-ollama
+
+Integration layer between LlamaIndex and Ollama. Lets you use local Ollama models as the LLM backend.
+
+### llama-index-embeddings-huggingface
+
+Provides local embedding models from HuggingFace. The demo uses `all-MiniLM-L6-v2`, which:
+- Runs on CPU (no GPU required)
+- Downloads ~80 MB on first use
+- Converts text into vectors for semantic search
+- Works completely offline after download
+
+### llama-index-readers-file
+
+File readers for multiple formats:
+- `.txt` (plain text)
+- `.pdf` (PDF documents)
+- `.csv` (CSV spreadsheets)
+- `.docx` (Word documents)
+
+### gradio
+
+Web UI framework for building the chat interface. Provides:
+- Chat components
+- File upload
+- Dropdown selectors
+- Example buttons
+- Theming and CSS customization
+
+## Alternative models
+
+You can swap Llama 3.1 for other models based on your hardware:
+
+### Smaller/faster models
+
+```bash
+# 3.8B parameters, runs on almost anything
+ollama pull phi3:mini
+
+# 3B parameters, very fast
+ollama pull llama3.2:3b
+```
+
+### Larger/better models
+
+```bash
+# Needs ~40GB RAM, but incredible quality
+ollama pull llama3.1:70b
+```
+
+### Best for reasoning
+
+```bash
+# Strong reasoning, MIT license
+ollama pull deepseek-r1:7b
+```
+
+To use a different model, update the model name in the scripts:
+
+```python
+Settings.llm = Ollama(model="phi3:mini")  # Change in demo_step2_rag.py and demo_step3_app.py
+```
+
+For Step 1:
+
+```python
+stream = ollama.chat(model="phi3:mini", ...)  # Change in demo_step1_ollama.py
+```
+
+## Troubleshooting
+
+### Ollama issues
+
+<AccordionGroup>
+  <Accordion title="Ollama isn't responding">
+    **Symptom:** Scripts hang or show connection errors
+
+    **Solution:**
+    ```bash
+    # Check if Ollama is running
+    ollama list
+
+    # If not, start it
+    ollama serve
+    ```
+  </Accordion>
+
+  <Accordion title="Model not found">
+    **Symptom:** Error message says model doesn't exist
+
+    **Solution:**
+    ```bash
+    # Pull the model
+    ollama pull llama3.1
+
+    # Verify it's installed
+    ollama list
+    ```
+  </Accordion>
+
+  <Accordion title="Connection refused">
+    **Symptom:** `Connection refused to localhost:11434`
+
+    **Solution:**
+    - Ensure no firewall is blocking port 11434
+    - Check that Ollama is running: `ollama serve`
+    - Verify Ollama is listening: `curl http://localhost:11434`
+  </Accordion>
+</AccordionGroup>
+
+### Performance issues
+
+<AccordionGroup>
+  <Accordion title="Very slow generation">
+    **Symptom:** Tokens appear very slowly (< 3 per second)
+
+    **Solution:**
+    - Close other applications to free RAM
+    - Try a smaller model: `ollama pull llama3.2:3b`
+    - Check Activity Monitor/Task Manager for memory usage
+    - CPU-only inference is inherently slower—expect 3-8 tok/sec
+  </Accordion>
+
+  <Accordion title="Index building is slow">
+    **Symptom:** Step 2 hangs at "Building vector index"
+
+    **Solution:**
+    - First run downloads the embedding model (~80 MB)
+    - Check internet connection
+    - Subsequent runs use cache and are instant
+    - Cached location: `~/.cache/huggingface/hub/`
+  </Accordion>
+
+  <Accordion title="App is unresponsive">
+    **Symptom:** Gradio app freezes or crashes
+
+    **Solution:**
+    - Ensure at least 8 GB RAM is available
+    - Llama 3.1 8B uses ~4-5 GB when loaded
+    - Close browser tabs and other apps
+    - Restart the app
+  </Accordion>
+</AccordionGroup>
+
+### Python issues
+
+<AccordionGroup>
+  <Accordion title="Module not found">
+    **Symptom:** `ModuleNotFoundError: No module named 'llama_index'`
+
+    **Solution:**
+    ```bash
+    # Ensure virtual environment is activated
+    source .venv/bin/activate  # macOS/Linux
+    .venv\Scripts\activate    # Windows
+
+    # Reinstall dependencies
+    pip install -r requirements.txt
+    ```
+  </Accordion>
+
+  <Accordion title="Wrong Python version">
+    **Symptom:** `SyntaxError` or version mismatch
+
+    **Solution:**
+    ```bash
+    # Check Python version
+    python3 --version
+
+    # Must be 3.10 or higher
+    # If not, install Python 3.10+ and recreate venv
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Gradio issues
+
+<AccordionGroup>
+  <Accordion title="Browser doesn't open">
+    **Symptom:** Script runs but browser doesn't launch
+
+    **Solution:**
+    - Navigate manually to `http://localhost:7860`
+    - Or set browser env var: `BROWSER=chrome python scripts/demo_step3_app.py`
+  </Accordion>
+
+  <Accordion title="Port already in use">
+    **Symptom:** `OSError: [Errno 48] Address already in use`
+
+    **Solution:**
+    ```bash
+    # Find and kill the process using port 7860
+    lsof -i :7860  # macOS/Linux
+    netstat -ano | findstr :7860  # Windows
+
+    # Or use a different port
+    python scripts/demo_step3_app.py --port 8080
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Hardware performance guide
+
+### Apple Silicon (M1/M2/M3/M4)
+
+- **Expected speed:** 15-25 tokens/second
+- **Memory usage:** ~5-6 GB for Llama 3.1 8B
+- **Recommendation:** Ideal for this demo
+
+### Intel/AMD with GPU
+
+- **Expected speed:** 10-20 tokens/second (with 8+ GB VRAM)
+- **Memory usage:** ~4-5 GB GPU VRAM
+- **Recommendation:** Excellent performance
+
+### Intel/AMD CPU only
+
+- **Expected speed:** 3-8 tokens/second
+- **Memory usage:** ~8-10 GB RAM
+- **Recommendation:** Slower but still usable for demos
+
+### Memory requirements by model
+
+| Model | Size | RAM Needed | Speed (Apple Silicon) |
+|-------|------|------------|------------------------|
+| `llama3.2:3b` | ~3B params | 4-6 GB | 25-35 tok/sec |
+| `llama3.1` (8B) | ~8B params | 8-10 GB | 15-25 tok/sec |
+| `llama3.1:70b` | ~70B params | 40+ GB | 3-5 tok/sec |
+| `phi3:mini` | ~3.8B params | 4-6 GB | 20-30 tok/sec |
+| `deepseek-r1:7b` | ~7B params | 8-10 GB | 12-20 tok/sec |
+
+## Pre-demo checklist
+
+Before presenting or running at an event:
+
+- [ ] Ollama is running (`ollama list` shows `llama3.1`)
+- [ ] All pre-warm commands have been run
+- [ ] Embedding model is cached (~80 MB, check `~/.cache/huggingface/hub/`)
+- [ ] Terminal font size is large enough for the back row
+- [ ] Other applications are closed to free memory
+- [ ] Virtual environment is activated
+- [ ] All scripts have been tested at least once
+
+<Warning>
+  **For live demos:** Have a backup screen recording ready in case of hardware failure. Record it at the venue so the environment looks authentic.
+</Warning>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Run the quickstart" icon="rocket" href="/quickstart">
+    Get the demo running in 10 minutes
+  </Card>
+  <Card title="Understand the architecture" icon="diagram-project" href="/reference/architecture">
+    Learn how the RAG pipeline works
+  </Card>
+  <Card title="Explore the datasets" icon="database" href="/data/overview">
+    See what civic data is included
+  </Card>
+  <Card title="Customize your app" icon="wrench" href="/guides/swap-data">
+    Change prompts, add tracks, and deploy
+  </Card>
+</CardGroup>

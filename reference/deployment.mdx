@@ -1,0 +1,449 @@
+---
+title: Deployment options
+description: Deploy the CivicHacks Demo locally, via Gradio share, or on Hugging Face Spaces
+---
+
+## Overview
+
+The CivicHacks Demo supports three deployment modes:
+
+1. **Local only** (default) — Runs on `localhost`, no data leaves your machine
+2. **Gradio share** — Temporary public URL via tunneling (72-hour limit)
+3. **Hugging Face Spaces** — Free cloud hosting (requires model swap)
+
+<Info>
+Local deployment is recommended for hackathons and demos. It's private, fast, and requires zero configuration.
+</Info>
+
+## Local deployment (default)
+
+The app runs entirely on your machine. No data is sent to the cloud, and no API keys are required.
+
+### Step 3: Full web app
+
+```bash
+# Start the app
+python scripts/demo_step3_app.py
+
+# Opens at http://localhost:7860
+```
+
+**Access points:**
+- Same machine: `http://localhost:7860`
+- Other devices on same network: `http://YOUR_IP:7860`
+
+<Accordion title="Find your local IP address">
+  **macOS/Linux:**
+  ```bash
+  # Get your local IP
+  ipconfig getifaddr en0    # WiFi
+  ipconfig getifaddr en1    # Ethernet
+  ```
+  
+  **Windows:**
+  ```bash
+  ipconfig | findstr IPv4
+  ```
+  
+  Then share `http://YOUR_IP:7860` with others on your network.
+</Accordion>
+
+### Step 5: BYOD web app
+
+```bash
+# Start the BYOD app
+python scripts/demo_step5_byod_app.py
+
+# Opens at http://localhost:8861
+```
+
+**Different port:** Step 5 uses port 8861 to avoid conflicts with Step 3.
+
+### Custom port
+
+Change the port if needed:
+
+```bash
+# Step 3 on custom port
+python scripts/demo_step3_app.py --port 8080
+
+# Step 5 on custom port
+python scripts/demo_step5_byod_app.py --port 9000
+```
+
+### Server configuration
+
+Both apps bind to `0.0.0.0` by default, making them accessible on your local network:
+
+```python
+app.launch(
+    server_name="0.0.0.0",  # Listen on all interfaces
+    server_port=7860,
+    # ...
+)
+```
+
+<Warning>
+If deploying on a public network, be aware that anyone on the network can access your app. Use a firewall or restrict `server_name` to `"127.0.0.1"` for localhost-only access.
+</Warning>
+
+## Gradio share (temporary public URL)
+
+Gradio can create a temporary public URL that tunnels to your local machine. Useful for:
+- Sharing with remote judges
+- Quick demos to people not on your network
+- Testing mobile access
+
+### How to enable
+
+```bash
+# Step 3 with share link
+python scripts/demo_step3_app.py --share
+
+# Step 5 with share link
+python scripts/demo_step5_byod_app.py --share
+```
+
+**Output:**
+
+```
+Running on local URL:  http://127.0.0.1:7860
+Running on public URL: https://abc123xyz.gradio.live
+
+This share link expires in 72 hours.
+```
+
+<Info>
+The share link works for 72 hours or until you stop the script, whichever comes first.
+</Info>
+
+### How it works
+
+```
+┌──────────────┐      Internet       ┌──────────────┐
+│   Browser    │ ←──────────────────→ │    Gradio    │
+│  (anywhere)  │   HTTPS tunnel       │   Servers    │
+└──────────────┘                      └──────┬───────┘
+                                             │
+                                             ▼
+                                    ┌─────────────────┐
+                                    │  Your Machine   │
+                                    │  localhost:7860 │
+                                    └─────────────────┘
+```
+
+Gradio creates a secure tunnel from their servers to your local app.
+
+<Warning>
+Data passes through Gradio's servers for routing, but the LLM inference still happens locally on your machine. Your civic data files never leave your machine.
+</Warning>
+
+### Troubleshooting share links
+
+<AccordionGroup>
+  <Accordion title="Share link creation fails">
+    **Error:** "Could not create share link"
+    
+    **Solutions:**
+    - Check internet connection: `curl -I https://gradio.app`
+    - Try a different network (some corporate/school networks block tunneling)
+    - Use mobile hotspot as alternative
+  </Accordion>
+
+  <Accordion title="Share link is slow">
+    The tunnel adds latency. For local demos, use `localhost` instead of the share link.
+  </Accordion>
+
+  <Accordion title="Share link stopped working">
+    Share links expire after 72 hours or when you stop the script. Restart the app with `--share` to get a new link.
+  </Accordion>
+</AccordionGroup>
+
+## Hugging Face Spaces (free cloud hosting)
+
+Deploy the web app to Hugging Face Spaces for permanent, free hosting.
+
+<Warning>
+**Important limitation:** Hugging Face Spaces doesn't support Ollama (which runs locally). You must swap to a cloud-based model API or use HF Inference API.
+</Warning>
+
+### Prerequisites
+
+1. Create a free account at [huggingface.co](https://huggingface.co)
+2. Create a new Space:
+   - Click "New" → "Space"
+   - Choose "Gradio" as the SDK
+   - Select "Public" or "Private"
+
+### Option 1: Use Hugging Face Inference API
+
+**Free tier:** 1,000 requests/day for most models.
+
+Update your script to use HF Inference API instead of Ollama:
+
+```python
+from llama_index.llms.huggingface import HuggingFaceInferenceAPI
+from llama_index.core import Settings
+import os
+
+# Use HF Inference API
+Settings.llm = HuggingFaceInferenceAPI(
+    model_name="meta-llama/Meta-Llama-3-8B-Instruct",
+    token=os.getenv("HF_TOKEN"),  # Add this as a Space secret
+)
+
+# Rest of your code stays the same...
+```
+
+**Add your HF token as a Space secret:**
+1. Go to your Space settings
+2. Add a new secret: `HF_TOKEN` = your token from [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
+
+### Option 2: Use OpenAI API
+
+**Cost:** ~$0.002 per query with GPT-4o-mini.
+
+```python
+from llama_index.llms.openai import OpenAI
+from llama_index.core import Settings
+import os
+
+Settings.llm = OpenAI(
+    model="gpt-4o-mini",
+    api_key=os.getenv("OPENAI_API_KEY"),  # Add as Space secret
+)
+```
+
+### Deploy to Spaces
+
+<AccordionGroup>
+  <Accordion title="Via Git (recommended)">
+    ```bash
+    # Clone your Space repo
+    git clone https://huggingface.co/spaces/YOUR_USERNAME/YOUR_SPACE_NAME
+    cd YOUR_SPACE_NAME
+    
+    # Copy your files
+    cp ../civichacks-demo/scripts/demo_step3_app.py app.py
+    cp ../civichacks-demo/data/* .
+    cp ../civichacks-demo/requirements.txt .
+    
+    # Update requirements.txt
+    # Remove: llama-index-llms-ollama
+    # Add: llama-index-llms-huggingface (or openai)
+    
+    # Commit and push
+    git add .
+    git commit -m "Initial deployment"
+    git push
+    ```
+    
+    Your Space will rebuild automatically.
+  </Accordion>
+
+  <Accordion title="Via web interface">
+    1. Go to your Space page
+    2. Click "Files" tab
+    3. Upload:
+       - `demo_step3_app.py` (rename to `app.py`)
+       - `requirements.txt` (updated)
+       - All files from `data/` directory
+    4. The Space will build automatically
+  </Accordion>
+</AccordionGroup>
+
+### Required file structure
+
+```
+Your-Space/
+├── app.py                  # Renamed from demo_step3_app.py
+├── requirements.txt        # Updated dependencies
+├── README.md              # Space description
+└── data/                  # Your civic datasets
+    ├── ecohack_boston_environment.txt
+    ├── cityhack_boston_311.txt
+    ├── eduhack_boston_schools.txt
+    └── justicehack_ma_justice.txt
+```
+
+### Update requirements.txt for Spaces
+
+Remove Ollama-specific dependencies:
+
+```txt
+llama-index>=0.12.0
+llama-index-embeddings-huggingface>=0.5.0
+llama-index-readers-file>=0.4.0
+gradio>=5.0.0
+
+# Choose ONE:
+llama-index-llms-huggingface>=0.5.0  # For HF Inference API
+# OR
+llama-index-llms-openai>=0.3.0       # For OpenAI
+```
+
+<Tip>
+Hugging Face Spaces has generous free tier limits. For a hackathon demo, HF Inference API is usually sufficient.
+</Tip>
+
+## Streamlit Cloud (alternative)
+
+Streamlit Cloud is another free hosting option. You'll need to convert the Gradio app to Streamlit.
+
+### Conversion example
+
+**Gradio (current):**
+```python
+import gradio as gr
+
+def query_fn(question, track):
+    # ...
+    return response
+
+with gr.Blocks() as app:
+    track = gr.Dropdown(["eco", "city", "edu", "justice"])
+    question = gr.Textbox()
+    output = gr.Textbox()
+    question.submit(query_fn, [question, track], output)
+
+app.launch()
+```
+
+**Streamlit (converted):**
+```python
+import streamlit as st
+
+st.title("CivicHacks AI Assistant")
+
+track = st.selectbox("Select track", ["eco", "city", "edu", "justice"])
+question = st.text_input("Ask a question")
+
+if question:
+    response = query_fn(question, track)
+    st.write(response)
+```
+
+### Deploy to Streamlit Cloud
+
+1. Push code to GitHub
+2. Go to [share.streamlit.io](https://share.streamlit.io)
+3. Connect your GitHub repo
+4. Select the branch and main file (`app.py`)
+5. Deploy
+
+<Info>
+Streamlit Cloud also requires cloud-based LLM APIs (no Ollama support).
+</Info>
+
+## Docker deployment (advanced)
+
+For self-hosted deployment on a server, use Docker.
+
+### Dockerfile example
+
+```dockerfile
+FROM python:3.12-slim
+
+# Install Ollama
+RUN curl -fsSL https://ollama.com/install.sh | sh
+
+# Install Python dependencies
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application files
+COPY scripts/ ./scripts/
+COPY data/ ./data/
+
+# Download model
+RUN ollama pull llama3.1
+
+# Expose ports
+EXPOSE 7860 11434
+
+# Start Ollama and the app
+CMD ["sh", "-c", "ollama serve & python scripts/demo_step3_app.py"]
+```
+
+### Build and run
+
+```bash
+# Build image
+docker build -t civichacks-demo .
+
+# Run container
+docker run -p 7860:7860 -p 11434:11434 civichacks-demo
+```
+
+<Warning>
+Docker deployment is complex and requires managing Ollama inside the container. Only recommended for experienced users.
+</Warning>
+
+## Performance comparison
+
+| Deployment | Speed | Privacy | Cost | Setup |
+|------------|-------|---------|------|-------|
+| **Local** | Fast (local hardware) | 100% private | Free (electricity) | Easy |
+| **Gradio share** | Fast (local hardware) | Data routed via Gradio | Free (electricity) | Easy |
+| **HF Spaces** | Slow (shared CPU) | Data sent to HF/OpenAI | Free tier or API costs | Medium |
+| **Streamlit Cloud** | Slow (shared CPU) | Data sent to cloud | Free tier or API costs | Medium |
+| **Docker** | Depends on server | Depends on hosting | Server costs | Hard |
+
+<Tip>
+For hackathons and live demos, stick with local deployment. It's faster, more private, and doesn't require API keys or internet.
+</Tip>
+
+## Network security considerations
+
+### Local network access
+
+When running on `0.0.0.0`, your app is accessible to anyone on your network.
+
+**Restrict to localhost only:**
+
+```python
+app.launch(
+    server_name="127.0.0.1",  # Only accessible on same machine
+    server_port=7860,
+)
+```
+
+### Firewall rules
+
+If you want network access but with restrictions, configure your firewall:
+
+**macOS:**
+```bash
+# Allow connections from specific IP range
+sudo pfctl -e
+sudo pfctl -f /etc/pf.conf
+```
+
+**Linux (ufw):**
+```bash
+# Allow from local network only
+sudo ufw allow from 192.168.1.0/24 to any port 7860
+```
+
+### Authentication
+
+Gradio supports basic authentication:
+
+```python
+app.launch(
+    auth=("username", "password"),  # Simple auth
+    # or
+    auth=lambda u, p: u == "admin" and p == "secret",  # Custom logic
+)
+```
+
+<Warning>
+Basic auth is not secure over HTTP. Use HTTPS if deploying on public networks.
+</Warning>
+
+## Related resources
+
+- [System architecture](/reference/architecture)
+- [Troubleshooting guide](/reference/troubleshooting)
+- [Cost estimator module](/reference/cost-estimator)

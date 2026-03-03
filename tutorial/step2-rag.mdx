@@ -1,0 +1,294 @@
+---
+title: 'Step 2: RAG with civic data'
+description: 'Connect local AI to real civic data using Retrieval Augmented Generation'
+---
+
+## Overview
+
+This step connects the local AI to real civic data using Retrieval Augmented Generation (RAG). In ~15 lines of code, you can query real civic documents with a local AI — no APIs, no cost.
+
+**Duration:** ~90 seconds
+
+**What you'll learn:**
+- How to load civic datasets and build a vector search index
+- How RAG grounds AI responses in actual data
+- How to query across different civic data tracks
+
+## Prerequisites
+
+Complete [Step 1: Local AI with Ollama](/tutorial/step1-local-ai) first, then install the RAG dependencies:
+
+```bash
+pip install llama-index llama-index-llms-ollama llama-index-embeddings-huggingface
+```
+
+## Available tracks
+
+The demo includes four civic data tracks:
+
+| Track | Key | Data file | Focus |
+|-------|-----|-----------|-------|
+| 🌿 EcoHack | `eco` | `ecohack_boston_environment.txt` | Air quality, heat islands, climate resilience |
+| 🏙️ CityHack | `city` | `cityhack_boston_311.txt` | 311 service requests, equity gaps |
+| 📚 EduHack | `edu` | `eduhack_boston_schools.txt` | Achievement gaps, absenteeism, tech access |
+| ⚖️ JusticeHack | `justice` | `justicehack_ma_justice.txt` | Incarceration disparities, policing data |
+
+<Note>
+  All datasets are synthetic but realistic — fabricated for demonstration purposes using real-world patterns.
+</Note>
+
+## Running the demo
+
+### Basic usage
+
+```bash
+# Random question from CityHack track (default)
+python scripts/demo_step2_rag.py city
+
+# Random question from EcoHack track
+python scripts/demo_step2_rag.py eco
+
+# Defaults to city track if no argument given
+python scripts/demo_step2_rag.py
+```
+
+### Specific question
+
+Each track has 3 pre-written questions numbered 1-3:
+
+```bash
+# Ask question 2 from JusticeHack track
+python scripts/demo_step2_rag.py justice 2
+```
+
+### All questions
+
+```bash
+# Run all 3 questions for the EcoHack track
+python scripts/demo_step2_rag.py eco --all
+```
+
+## Command-line options
+
+| Option | Description |
+|--------|-------------|
+| `track` | Hackathon track to query: `eco`, `city`, `edu`, `justice` (default: `city`) |
+| `question` | Question number to ask (1-3). If omitted, picks a random question |
+| `--all` | Run all 3 sample questions for the track |
+
+<Tip>
+  Use `--help` to see all options:
+  ```bash
+  python scripts/demo_step2_rag.py --help
+  ```
+</Tip>
+
+## Sample questions by track
+
+### EcoHack
+
+1. Which Boston neighborhoods have the worst air quality and why?
+2. What are the biggest environmental justice concerns in this data?
+3. How is climate change specifically threatening Boston's coastline?
+
+### CityHack
+
+1. Which neighborhoods have the longest 311 response times and what are the equity implications?
+2. What are the biggest service gaps for non-English speaking residents?
+3. What patterns suggest systemic inequity in city service delivery?
+
+### EduHack
+
+1. What are the most significant achievement gaps in Boston public schools?
+2. How does transportation affect student attendance and outcomes?
+3. What technology access barriers exist for students and teachers?
+
+### JusticeHack
+
+1. What racial disparities exist in pretrial detention in Massachusetts?
+2. How effective are reentry programs at reducing recidivism?
+3. What does the data reveal about policing patterns in Boston?
+
+## Expected output
+
+```
+════════════════════════════════════════════════════════════
+  CIVICHACKS 2026 — RAG Demo: 🏙️ CityHack
+════════════════════════════════════════════════════════════
+
+⚙️  Configuring local AI stack...
+   Host: YOUR-HOSTNAME
+   Time: February 21, 2026 at 10:15:23 AM
+   Model: llama3.1 (via Ollama — running on YOUR-HOSTNAME)
+   Embeddings: all-MiniLM-L6-v2 (runs on CPU)
+
+📄 Loading civic data: cityhack_boston_311.txt
+   Loaded 1 document(s), 12,345 characters
+
+🔍 Building vector index (this is the 'RAG' magic)...
+   Index built in 2.3s
+
+────────────────────────────────────────────────────────────
+💬 Question 1/3: Which neighborhoods have the longest 311 response times?
+
+🤖 Answer:
+
+[AI response streams here, citing specific data from the document]
+
+⏱️  8.2s · ~156 tokens
+⚡ Local: $0.000008 (0.034 Wh @ 15W) · GPT-4o: $0.0019 (238x more)
+
+════════════════════════════════════════════════════════════
+✅ Real civic data + local AI + zero cost = civic tech prototype
+════════════════════════════════════════════════════════════
+```
+
+## How it works
+
+The RAG pipeline performs these steps:
+
+<Steps>
+  <Step title="Configure the AI stack">
+    Sets up the local LLM and embedding model:
+
+    ```python
+    from llama_index.core import Settings
+    from llama_index.llms.ollama import Ollama
+    from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+
+    Settings.llm = Ollama(model="llama3.1", request_timeout=120.0)
+    Settings.embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L6-v2")
+    ```
+
+    <Note>
+      The embedding model (~80 MB) downloads on first use and is cached in `~/.cache/huggingface/hub/`
+    </Note>
+  </Step>
+
+  <Step title="Load the civic dataset">
+    Reads the track-specific data file:
+
+    ```python
+    from llama_index.core import SimpleDirectoryReader
+
+    documents = SimpleDirectoryReader(input_files=[str(data_file)]).load_data()
+    ```
+  </Step>
+
+  <Step title="Build the vector index">
+    Chunks the text, computes embeddings, and builds a searchable vector index in memory:
+
+    ```python
+    from llama_index.core import VectorStoreIndex
+
+    index = VectorStoreIndex.from_documents(documents)
+    ```
+
+    This is the "RAG magic" — the index enables semantic search across the data.
+  </Step>
+
+  <Step title="Query the index">
+    Retrieves the 3 most relevant chunks and sends them + the question to the LLM:
+
+    ```python
+    query_engine = index.as_query_engine(streaming=True, similarity_top_k=3)
+    response = query_engine.query(question)
+    response.print_response_stream()
+    ```
+
+    The AI generates a response grounded in the actual data, citing specific statistics.
+  </Step>
+</Steps>
+
+## Data flow diagram
+
+```
+1. User asks a question
+   ↓
+2. Embedding model converts question to vector
+   ↓
+3. Vector index retrieves 3 most relevant chunks from civic dataset
+   ↓
+4. Retrieved context + question sent to Llama 3.1 via Ollama
+   ↓
+5. LLM generates grounded answer citing real data
+   ↓
+6. Response streams back to terminal
+```
+
+## Performance tips
+
+<Tip>
+  **Pre-warm the embedding model** by running each track once before presenting:
+  ```bash
+  python scripts/demo_step2_rag.py eco
+  python scripts/demo_step2_rag.py city
+  python scripts/demo_step2_rag.py edu
+  python scripts/demo_step2_rag.py justice
+  ```
+  This ensures the embedding model is downloaded and cached.
+</Tip>
+
+<Warning>
+  First runs are slower because the embedding model downloads (~80 MB). Subsequent runs use the cached model and are much faster.
+</Warning>
+
+## Customizing the data
+
+To use your own civic data:
+
+1. Add a `.txt` file to the `data/` directory
+2. Update the `TRACKS` dictionary in `scripts/demo_step2_rag.py`:
+
+```python
+TRACKS = {
+    "yourtrack": {
+        "name": "🎯 Your Track",
+        "file": "yourtrack_data.txt",
+        "queries": [
+            "Your first question?",
+            "Your second question?",
+            "Your third question?",
+        ],
+    },
+}
+```
+
+3. Run it:
+
+```bash
+python scripts/demo_step2_rag.py yourtrack
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Error: embeddings.position_ids UNEXPECTED">
+    This is a harmless warning from the HuggingFace model. The script suppresses it with:
+    ```python
+    os.environ["TRANSFORMERS_VERBOSITY"] = "error"
+    ```
+  </Accordion>
+
+  <Accordion title="Index building is slow">
+    First run downloads the embedding model (~80 MB). Subsequent runs use the cache and are faster.
+  </Accordion>
+
+  <Accordion title="Response doesn't cite data">
+    Increase `similarity_top_k` to retrieve more chunks:
+    ```python
+    query_engine = index.as_query_engine(similarity_top_k=5)
+    ```
+  </Accordion>
+
+  <Accordion title="No module named 'llama_index'">
+    Install the dependencies:
+    ```bash
+    pip install llama-index llama-index-llms-ollama llama-index-embeddings-huggingface
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+Now that you've seen RAG with civic data, move to [Step 3: Gradio Web Application](/tutorial/step3-web-app) to wrap this in a shareable web interface.

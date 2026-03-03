@@ -1,0 +1,301 @@
+---
+title: JusticeHack dataset
+description: Massachusetts criminal justice data covering incarceration disparities, pretrial detention, recidivism, policing, and legal representation
+---
+
+The **JusticeHack dataset** (`justicehack_ma_justice.txt`) is a synthetic criminal justice reform progress report for Massachusetts, 2025. It contains detailed metrics on incarceration rates, racial disparities, pretrial detention, recidivism, policing data, juvenile justice, and access to legal representation.
+
+## Dataset overview
+
+<Info>
+**File**: `data/justicehack_ma_justice.txt`  
+**Scope**: Massachusetts Criminal Justice Reform Progress Report, 2025  
+**Size**: ~31 lines, 14,500+ characters  
+**Format**: Plain text, structured report
+</Info>
+
+## Data sections
+
+<Tabs>
+  <Tab title="Incarceration overview">
+    ### Prison and jail populations
+    
+    - State prison population: **6,847** (down 18% from 2019)
+    - County jail population: **4,291** (down 12% from 2019)
+    - Incarceration rate: **152 per 100,000** (lowest in US, national avg: 350)
+    
+    **Racial disparities persist despite 2018 reforms:**
+    - Black residents incarcerated at **7.9x** the rate of White residents
+    - Hispanic/Latino residents at **4.2x** the rate of White residents
+    - No improvement since 2018 Criminal Justice Reform Act
+  </Tab>
+  
+  <Tab title="Pretrial detention">
+    ### Pretrial population and bail
+    
+    - Average daily pretrial population: **3,412** (48% of total jail population)
+    - Average length of detention: **94 days**
+    - 62% held on bail amounts of **$5,000 or less**
+    
+    **Racial breakdown:**
+    - Black: 38%
+    - Hispanic/Latino: 31%
+    - White: 27%
+    - Other: 4%
+    
+    **Suffolk County (Boston) insights:**
+    - 71% of low-level pretrial detainees released without further incarceration
+    - Cost: **$182 per person per day**
+    - Pretrial detention increases guilty plea likelihood by **2.5x**
+    
+    **Trend**: Cash bail usage down 23% since reforms, but judges increased dangerousness hearings by 45% as alternative detention path.
+  </Tab>
+  
+  <Tab title="Recidivism & reentry">
+    ### Three-year recidivism rates
+    
+    - Overall: **32%** (re-incarceration)
+    
+    **By offense type:**
+    - Property crimes: 41%
+    - Drug offenses: 38%
+    - Violent offenses: 24%
+    
+    **Impact of programs:**
+    - Prison education programs: **28% lower** recidivism
+    - Employment within 30 days: **47% lower** recidivism
+    
+    **Barriers to reentry:**
+    - 68% reported difficulty finding employment
+    - 41% experienced housing instability within 6 months
+    - Geographic disparity: Suffolk County has 14 reentry programs, Berkshire County has 2
+    - FY2025 reentry budget: $28M serving ~8,400 individuals (35% of those released annually)
+  </Tab>
+  
+  <Tab title="Policing data">
+    ### Boston Police Department (BPD) field stops
+    
+    - **14,827 FIO stops** (Field Interrogation and Observation) in 2025
+    
+    **Racial breakdown:**
+    - Black individuals: 63% (population: 23%)
+    - Hispanic/Latino: 18%
+    - White: 15%
+    - Other: 4%
+    
+    **Outcomes:**
+    - 89% resulted in **no action** (no arrest, citation, or further activity)
+    - Most common reason: "suspicious behavior" (47%)
+    
+    ### Use of force and accountability
+    
+    - Use of force incidents: **387** (down 8% from 2024)
+    - 72% involved Black or Hispanic/Latino individuals
+    - Body camera compliance: **94%**
+    - Internal affairs complaints: 412 filed, **31 sustained** (7.5% sustain rate)
+    - Average complaint resolution time: **278 days**
+  </Tab>
+  
+  <Tab title="Juvenile & legal access">
+    ### Juvenile justice
+    
+    - Youth commitments to DYS facilities: **186** (down 42% from 2019)
+    
+    **Racial composition:**
+    - Black: 41%
+    - Hispanic/Latino: 33%
+    - White: 22%
+    - Other: 4%
+    
+    **Key insights:**
+    - Average commitment length: 14.2 months
+    - Community-based alternatives: **19% lower** re-offense rate vs. facilities
+    - 73% had documented mental health diagnosis, but only 48% received treatment
+    - School-to-prison pipeline: Students suspended/expelled are **3.1x more likely** to have juvenile justice contact within 2 years
+    - Black students suspended at **4x** the rate of White students in BPS
+    
+    ### Access to legal representation
+    
+    - Public defender caseloads: **418 cases/year** (national standard: ≤150 for misdemeanors)
+    - 2,100 cases with **45+ day wait** for counsel appointment
+    - 34% of district court defendants **unrepresented**
+    - Legal aid demand: +40% since 2022, funding: +8%
+  </Tab>
+</Tabs>
+
+## Sample queries
+
+Here are the three built-in queries for the JusticeHack track:
+
+<CodeGroup>
+```bash Query 1: Pretrial disparities
+python scripts/demo_step2_rag.py justice 1
+```
+
+```bash Query 2: Reentry effectiveness
+python scripts/demo_step2_rag.py justice 2
+```
+
+```bash Query 3: Policing patterns
+python scripts/demo_step2_rag.py justice 3
+```
+</CodeGroup>
+
+### Query 1: What racial disparities exist in pretrial detention in Massachusetts?
+
+This query surfaces:
+- Black: 38% of pretrial detainees (population: ~9%)
+- Hispanic/Latino: 31% of pretrial detainees
+- White: 27% of pretrial detainees (population: ~70%)
+- 62% held on bail ≤$5,000
+- Average detention: 94 days
+- 71% of low-level detainees in Suffolk County ultimately released without further incarceration
+- Pretrial detention increases guilty plea likelihood 2.5x
+
+### Query 2: How effective are reentry programs at reducing recidivism?
+
+This query identifies:
+- Overall 3-year recidivism: 32%
+- Prison education participants: 28% lower recidivism
+- Employment within 30 days: 47% lower recidivism
+- 68% report employment difficulties
+- 41% face housing instability within 6 months
+- Geographic disparity: Suffolk 14 programs, Berkshire 2
+- $28M budget serves only 35% of those released annually
+
+### Query 3: What does the data reveal about policing patterns in Boston?
+
+This query highlights:
+- 14,827 FIO stops in 2025
+- Black individuals: 63% of stops (23% of population)
+- 89% of stops result in no action
+- Most common reason: "suspicious behavior" (47%)
+- Use of force: 72% involve Black/Hispanic individuals
+- 94% body camera compliance
+- Internal affairs: 7.5% complaint sustain rate, 278-day avg resolution
+
+## Key metrics reference
+
+<AccordionGroup>
+  <Accordion title="Incarceration and racial disparities">
+    | Metric | Value | Context |
+    |--------|-------|----------|
+    | State prison population | 6,847 | Down 18% from 2019 |
+    | County jail population | 4,291 | Down 12% from 2019 |
+    | MA incarceration rate | 152 per 100K | Lowest in US (national: 350) |
+    | Black incarceration rate | **7.9x White** | No improvement since 2018 reforms |
+    | Hispanic/Latino rate | **4.2x White** | No improvement since 2018 reforms |
+  </Accordion>
+  
+  <Accordion title="Pretrial detention metrics">
+    | Metric | Value | Context |
+    |--------|-------|----------|
+    | Daily pretrial population | 3,412 | 48% of total jail population |
+    | Average detention length | 94 days | — |
+    | Held on bail ≤$5K | 62% | — |
+    | Cost per person per day | $182 | Suffolk County |
+    | Black detainees | 38% | — |
+    | Hispanic/Latino detainees | 31% | — |
+    | White detainees | 27% | — |
+    | Low-level → no further incarceration | 71% | Suffolk County |
+    | Pretrial → guilty plea multiplier | **2.5x** | vs. released defendants |
+    | Cash bail usage | -23% | Since 2018 reforms |
+    | Dangerousness hearings | +45% | Alternative detention path |
+  </Accordion>
+  
+  <Accordion title="Recidivism and reentry impact">
+    | Factor | Recidivism rate | Impact |
+    |--------|-----------------|--------|
+    | Overall 3-year | 32% | Baseline |
+    | Property crimes | 41% | +9 pts |
+    | Drug offenses | 38% | +6 pts |
+    | Violent offenses | 24% | -8 pts |
+    | Prison education programs | — | **-28%** |
+    | Employment within 30 days | — | **-47%** |
+    
+    **Barriers:**
+    - 68% difficulty finding employment
+    - 41% housing instability within 6 months
+    - FY2025 budget serves only 35% of releases
+  </Accordion>
+  
+  <Accordion title="Boston policing data (FIO stops)">
+    | Metric | Value | Population % |
+    |--------|-------|-------------|
+    | Total FIO stops | 14,827 | — |
+    | Black individuals stopped | 63% | 23% of Boston |
+    | Hispanic/Latino stopped | 18% | — |
+    | White individuals stopped | 15% | — |
+    | Stops with no action | 89% | — |
+    | Reason: "suspicious behavior" | 47% | — |
+    | Use of force incidents | 387 | Down 8% YoY |
+    | UoF involving Black/Hispanic | 72% | — |
+    | Body camera compliance | 94% | — |
+  </Accordion>
+  
+  <Accordion title="Juvenile justice metrics">
+    | Metric | Value | Context |
+    |--------|-------|----------|
+    | DYS commitments | 186 | Down 42% from 2019 |
+    | Average commitment length | 14.2 months | — |
+    | Black youth | 41% | — |
+    | Hispanic/Latino youth | 33% | — |
+    | White youth | 22% | — |
+    | Mental health diagnosis | 73% | Only 48% received treatment |
+    | Community alternatives | **-19%** re-offense | vs. facility commitments |
+    | Suspended/expelled → justice contact | **3.1x** | Within 2 years |
+    | Black BPS suspension rate | **4x White** | School-to-prison pipeline |
+  </Accordion>
+  
+  <Accordion title="Legal representation gaps">
+    | Metric | Value | Standard/Context |
+    |--------|-------|------------------|
+    | Public defender caseload | 418/year | National standard: ≤150 for misdemeanors |
+    | Cases with 45+ day wait for counsel | 2,100 | — |
+    | District court unrepresented | 34% | — |
+    | Legal aid demand increase | +40% | Since 2022 |
+    | Legal aid funding increase | +8% | Since 2022 |
+  </Accordion>
+</AccordionGroup>
+
+## Using this dataset in the web app
+
+When you select **JusticeHack** in the Gradio app (Step 3), the interface displays:
+
+- **Header**: "⚖️ JusticeHack — Analyze Massachusetts criminal justice reform, incarceration disparities, and policing data"
+- **Example questions**: All three queries above as clickable examples
+- **Chat responses**: AI answers grounded in the specific metrics from this dataset
+
+<Tip>
+Try asking follow-up questions like "Why is the pretrial detention rate so high?" or "What explains the school-to-prison pipeline?" to explore the data interactively.
+</Tip>
+
+## Querying from code
+
+Here's how the RAG pipeline loads and queries this dataset:
+
+```python
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
+from llama_index.llms.ollama import Ollama
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+
+# Configure local AI
+Settings.llm = Ollama(model="llama3.1", request_timeout=120.0)
+Settings.embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L6-v2")
+
+# Load the JusticeHack dataset
+data_file = "data/justicehack_ma_justice.txt"
+documents = SimpleDirectoryReader(input_files=[data_file]).load_data()
+
+# Build vector index
+index = VectorStoreIndex.from_documents(documents)
+query_engine = index.as_query_engine(streaming=True, similarity_top_k=3)
+
+# Query
+response = query_engine.query(
+    "What racial disparities exist in pretrial detention in Massachusetts?"
+)
+response.print_response_stream()
+```
+
+See [Step 2: RAG with civic data](/tutorial/step2-rag) for the full implementation.

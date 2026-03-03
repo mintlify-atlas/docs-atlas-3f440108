@@ -1,0 +1,209 @@
+---
+title: System architecture
+description: Learn about the CivicHacks Demo architecture and data flow
+---
+
+## Overview
+
+The CivicHacks Demo is built on a four-layer stack that runs entirely locally with zero cloud dependencies. Every component is open source and free to use.
+
+## Architecture diagram
+
+```
+┌─────────────────────────────────────────────┐
+│              Gradio Web UI (Step 3)         │  ← Browser-based chat interface
+├─────────────────────────────────────────────┤
+│          LlamaIndex RAG Pipeline (Step 2)   │  ← Retrieval Augmented Generation
+│   ┌──────────────┐    ┌──────────────────┐  │
+│   │ Vector Index  │    │ HuggingFace      │  │
+│   │ (in-memory)   │    │ Embeddings       │  │
+│   │               │    │ (all-MiniLM-L6)  │  │
+│   └──────────────┘    └──────────────────┘  │
+├─────────────────────────────────────────────┤
+│            Ollama + Llama 3.1 (Step 1)      │  ← Local LLM inference
+├─────────────────────────────────────────────┤
+│            Civic Data Files (data/)         │  ← .txt datasets per track
+└─────────────────────────────────────────────┘
+```
+
+## System components
+
+<AccordionGroup>
+  <Accordion title="Gradio Web UI">
+    The browser-based chat interface that provides:
+    - Dynamic header that updates when switching tracks
+    - Track selector dropdown for all four civic datasets
+    - Chat interface with message history
+    - Dynamic example questions per track
+    - Per-query cost comparison (local vs cloud)
+    - Red Hat-themed styling
+
+    Location: `scripts/demo_step3_app.py`
+  </Accordion>
+
+  <Accordion title="LlamaIndex RAG Pipeline">
+    The retrieval augmented generation layer that:
+    - Loads documents from the `data/` directory
+    - Builds in-memory vector indices for fast search
+    - Uses HuggingFace embeddings (all-MiniLM-L6-v2, ~80 MB)
+    - Retrieves relevant chunks before generating responses
+    - Caches indices for instant track switching
+
+    Location: `scripts/demo_step2_rag.py`, `scripts/demo_step3_app.py`
+  </Accordion>
+
+  <Accordion title="Ollama + Llama 3.1">
+    The local LLM inference engine that:
+    - Runs Llama 3.1 8B model locally (4.7 GB download)
+    - Provides OpenAI-compatible API on `localhost:11434`
+    - Supports streaming responses for real-time generation
+    - Works on CPU or GPU (Apple Silicon recommended)
+    - Returns token counts for cost estimation
+
+    Location: Ollama service (system-level)
+  </Accordion>
+
+  <Accordion title="Civic Data Files">
+    Plain text datasets covering four hackathon tracks:
+    - **EcoHack**: `ecohack_boston_environment.txt` (air quality, heat islands, climate resilience)
+    - **CityHack**: `cityhack_boston_311.txt` (311 service requests, equity gaps)
+    - **EduHack**: `eduhack_boston_schools.txt` (achievement gaps, absenteeism, tech access)
+    - **JusticeHack**: `justicehack_ma_justice.txt` (incarceration disparities, policing data)
+
+    Location: `data/` directory
+  </Accordion>
+</AccordionGroup>
+
+## Data flow
+
+Here's what happens when a user asks a question:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ 1. User asks question (terminal or Gradio UI)          │
+└───────────────────────┬─────────────────────────────────┘
+                        │
+                        ▼
+┌─────────────────────────────────────────────────────────┐
+│ 2. LlamaIndex converts question to vector              │
+│    (using HuggingFace all-MiniLM-L6-v2 embeddings)     │
+└───────────────────────┬─────────────────────────────────┘
+                        │
+                        ▼
+┌─────────────────────────────────────────────────────────┐
+│ 3. Vector index retrieves 3 most relevant chunks       │
+│    from the civic dataset                               │
+└───────────────────────┬─────────────────────────────────┘
+                        │
+                        ▼
+┌─────────────────────────────────────────────────────────┐
+│ 4. Retrieved context + question sent to Llama 3.1      │
+│    via Ollama (localhost:11434)                        │
+└───────────────────────┬─────────────────────────────────┘
+                        │
+                        ▼
+┌─────────────────────────────────────────────────────────┐
+│ 5. LLM generates grounded answer citing real data      │
+│    (streams back token by token)                        │
+└───────────────────────┬─────────────────────────────────┘
+                        │
+                        ▼
+┌─────────────────────────────────────────────────────────┐
+│ 6. Response displayed to user with cost comparison     │
+└─────────────────────────────────────────────────────────┘
+```
+
+<Info>
+Every step happens locally on your machine. No data is sent to the cloud, and there are no API keys required.
+</Info>
+
+## Hardware profiles
+
+The system adapts to different hardware configurations:
+
+| Hardware | Inference Speed | Memory Usage | Notes |
+|----------|----------------|--------------|-------|
+| Apple Silicon M1/M2/M3/M4 base | 15-25 tok/s | 4-5 GB | Ideal for demos |
+| Apple Silicon Pro/Max | 20-35 tok/s | 4-5 GB | Excellent performance |
+| x86 laptop (CPU-only) | 3-8 tok/s | 4-5 GB | Works, but slower |
+| x86 desktop (discrete GPU) | 15-40 tok/s | 4-5 GB | Fast generation |
+
+<Tip>
+Apple Silicon Macs are ideal for this demo. The unified memory architecture handles Llama 3.1 8B beautifully.
+</Tip>
+
+## System requirements
+
+| Component | Minimum | Recommended |
+|-----------|---------|-------------|
+| RAM | 8 GB | 16 GB |
+| GPU VRAM | Not required | 8+ GB |
+| Storage | 10 GB free | 20 GB free |
+| CPU | 4-core | Apple Silicon or recent Intel/AMD |
+| Python | 3.10+ | 3.12+ |
+
+<Warning>
+First runs are slower because models need to load into memory and the embedding model (~80 MB) downloads on first use. Always pre-warm all steps before a live demo.
+</Warning>
+
+## Caching strategy
+
+### Index caching (Step 3 app)
+
+The Gradio app caches built indices in a global dictionary:
+
+```python
+# Global index cache
+index_cache = {}
+
+def build_index(track_name):
+    if track_name in index_cache:
+        return index_cache[track_name]
+    
+    # Build index...
+    index_cache[track_name] = index
+    return index
+```
+
+This makes switching tracks instant after the first load.
+
+### Embedding model caching
+
+The HuggingFace embedding model downloads once to `~/.cache/huggingface/hub/` and is reused across all scripts.
+
+### Ollama model caching
+
+Ollama keeps models in `~/.ollama/models/`. Once downloaded, models are available offline.
+
+## Configuration options
+
+Key settings are defined in `scripts/demo_step2_rag.py` and `scripts/demo_step3_app.py`:
+
+```python
+# LLM configuration
+Settings.llm = Ollama(
+    model="llama3.1",
+    request_timeout=120.0
+)
+
+# Embedding configuration
+Settings.embed_model = HuggingFaceEmbedding(
+    model_name="all-MiniLM-L6-v2"
+)
+
+# Query engine configuration
+query_engine = index.as_query_engine(
+    streaming=True,
+    similarity_top_k=3  # Retrieve 3 most relevant chunks
+)
+```
+
+<Tip>
+You can swap models by changing the `model` parameter. Try `phi3:mini` for faster generation or `deepseek-r1:7b` for stronger reasoning.
+</Tip>
+
+## Related resources
+
+- [Cost estimator reference](/reference/cost-estimator)
+- [Deployment options](/reference/deployment)
+- [Troubleshooting guide](/reference/troubleshooting)

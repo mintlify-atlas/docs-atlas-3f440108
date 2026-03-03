@@ -1,0 +1,263 @@
+---
+title: AI tools and frameworks
+description: Reference guide for AI tools, frameworks, and libraries used in civic AI applications
+---
+
+## Your starting stack
+
+This is the exact stack from the live demo. It's a great starting point — you can build a complete hackathon project without adding anything else.
+
+<CardGroup cols={2}>
+  <Card title="Ollama" icon="cube" href="https://ollama.com">
+    Run LLMs locally with one command
+  </Card>
+  <Card title="LlamaIndex" icon="database" href="https://docs.llamaindex.ai">
+    RAG framework — connect AI to your data
+  </Card>
+  <Card title="Gradio" icon="window" href="https://gradio.app">
+    Build web UIs for ML apps in Python
+  </Card>
+  <Card title="HuggingFace" icon="face-smile" href="https://huggingface.co">
+    Local text embeddings (all-MiniLM-L6-v2)
+  </Card>
+</CardGroup>
+
+**Total cost:** Fractions of a cent in electricity per query. No API keys, no cloud bills, no data leaving your machine.
+
+## Local LLMs and model runtimes
+
+Run AI models on your own laptop — no internet, no API keys, no cost.
+
+<CardGroup cols={2}>
+  <Card title="Ollama" icon="terminal" href="https://ollama.com">
+    Easiest setup, great CLI, wide model support
+  </Card>
+  <Card title="LM Studio" icon="desktop" href="https://lmstudio.ai">
+    GUI-based, good for beginners who prefer a visual interface
+  </Card>
+  <Card title="llamafile" icon="file" href="https://github.com/Mozilla-Ocho/llamafile">
+    Single-file executables — download one file, run a model
+  </Card>
+  <Card title="vLLM" icon="server" href="https://docs.vllm.ai">
+    High-throughput serving, great for team/server deployments
+  </Card>
+  <Card title="Jan" icon="computer" href="https://jan.ai">
+    Desktop app for local AI, beginner-friendly
+  </Card>
+</CardGroup>
+
+## Models to try
+
+All available via `ollama pull <model>`. Experiment with different models to find the best fit for your project.
+
+| Model | Size | Best for | Command |
+|-------|------|----------|----------|
+| **Llama 3.1 8B** | 4.7 GB | General purpose (our demo default) | `ollama pull llama3.1` |
+| **Llama 3.2 3B** | 2.0 GB | Fast responses, lower RAM | `ollama pull llama3.2:3b` |
+| **Mistral 7B** | 4.1 GB | Strong general quality, Apache 2.0 license | `ollama pull mistral` |
+| **Phi-3 Mini** | 2.2 GB | Smallest model that's still useful | `ollama pull phi3:mini` |
+| **DeepSeek-R1 7B** | 4.7 GB | Reasoning and analysis tasks | `ollama pull deepseek-r1:7b` |
+| **Qwen 2.5 7B** | 4.7 GB | Strong multilingual support | `ollama pull qwen2.5` |
+| **Gemma 2 9B** | 5.4 GB | Google's open model, great quality | `ollama pull gemma2` |
+| **CodeLlama 7B** | 3.8 GB | Code generation and analysis | `ollama pull codellama` |
+
+<Tip>
+Start with Llama 3.1 (what we demoed). If your laptop is slow or has less than 8 GB RAM, try Llama 3.2:3b or Phi-3 Mini.
+</Tip>
+
+## RAG frameworks
+
+RAG (Retrieval Augmented Generation) is the technique we used in the demo — the AI retrieves relevant data **before** answering, so it cites real facts instead of hallucinating.
+
+<CardGroup cols={2}>
+  <Card title="LlamaIndex" icon="link" href="https://docs.llamaindex.ai">
+    Easiest RAG setup, great docs, what we used
+  </Card>
+  <Card title="LangChain" icon="chain" href="https://langchain.com">
+    Most popular, huge ecosystem, lots of integrations
+  </Card>
+  <Card title="Haystack" icon="magnifying-glass" href="https://haystack.deepset.ai">
+    Search-focused RAG, great for document Q&A
+  </Card>
+  <Card title="DSPy" icon="code" href="https://dspy.ai">
+    Programmatic prompting, academic-grade optimization
+  </Card>
+  <Card title="RAGFlow" icon="diagram-project" href="https://github.com/infiniflow/ragflow">
+    Visual RAG pipeline builder with built-in UI
+  </Card>
+  <Card title="Docling" icon="file-pdf" href="https://www.docling.ai">
+    Document parsing for RAG — converts PDF, DOCX, PPTX, HTML, images to Markdown/JSON
+  </Card>
+</CardGroup>
+
+<Note>
+Stick with **LlamaIndex** for this hackathon — it's what the demo uses, so you can build on top of the existing code without starting from scratch. Pair it with **Docling** if you need to parse complex PDFs, PowerPoints, or scanned documents.
+</Note>
+
+## Web UI frameworks
+
+Judges want to see a working demo. These frameworks let you build a polished web interface in Python — no JavaScript needed.
+
+<CardGroup cols={2}>
+  <Card title="Gradio" icon="comments" href="https://gradio.app">
+    Chat interfaces, ML demos (what we used)
+  </Card>
+  <Card title="Streamlit" icon="chart-line" href="https://streamlit.io">
+    Data dashboards, multi-page apps
+  </Card>
+  <Card title="Chainlit" icon="message" href="https://chainlit.io">
+    Chat-focused apps with auth and history
+  </Card>
+  <Card title="Panel" icon="table" href="https://panel.holoviz.org">
+    Complex data dashboards and visualizations
+  </Card>
+  <Card title="Mesop" icon="google" href="https://google.github.io/mesop">
+    Google's new Python web UI framework
+  </Card>
+  <Card title="NiceGUI" icon="palette" href="https://nicegui.io">
+    Full web apps with more UI control
+  </Card>
+</CardGroup>
+
+<Note>
+Use **Gradio** if you're building a chat/Q&A interface (fork our Step 3 or Step 5 code). Use **Streamlit** if you're building a data exploration dashboard.
+</Note>
+
+## Vector databases
+
+The demo uses LlamaIndex's in-memory vector store, which works great for small-to-medium datasets. If your project needs persistent storage or handles larger data, consider a dedicated vector database.
+
+<CardGroup cols={2}>
+  <Card title="ChromaDB" icon="circle" href="https://www.trychroma.com">
+    Simplest to set up, in-memory or persistent, great for hackathons
+  </Card>
+  <Card title="Faiss" icon="bolt" href="https://github.com/facebookresearch/faiss">
+    Fastest local search, Facebook/Meta, pure performance
+  </Card>
+  <Card title="Weaviate" icon="w" href="https://weaviate.io">
+    Full-featured, hybrid search, great API
+  </Card>
+  <Card title="Qdrant" icon="q" href="https://qdrant.tech">
+    Rust-based, fast, good filtering support
+  </Card>
+  <Card title="Milvus" icon="m" href="https://milvus.io">
+    Enterprise-grade, handles billions of vectors
+  </Card>
+</CardGroup>
+
+<Warning>
+For this hackathon, you probably don't need a separate vector database. The in-memory store in LlamaIndex handles thousands of documents just fine. Consider ChromaDB only if you need data to persist between app restarts.
+</Warning>
+
+## Agent frameworks
+
+Want your AI to do more than answer questions? Agent frameworks let AI plan and execute multi-step tasks — like researching a topic, analyzing data, and generating a report.
+
+<CardGroup cols={2}>
+  <Card title="CrewAI" icon="users" href="https://crewai.com">
+    Multi-agent teams with roles and tasks
+  </Card>
+  <Card title="AutoGen" icon="microsoft" href="https://github.com/microsoft/autogen">
+    Microsoft's multi-agent conversation framework
+  </Card>
+  <Card title="Agno" icon="rocket" href="https://agno.com">
+    Lightweight, fast agent framework
+  </Card>
+  <Card title="Smolagents" icon="face-smile" href="https://huggingface.co/docs/smolagents">
+    HuggingFace's simple agent library
+  </Card>
+  <Card title="Semantic Kernel" icon="brain" href="https://learn.microsoft.com/en-us/semantic-kernel/">
+    Microsoft, works with Python and .NET
+  </Card>
+  <Card title="LangGraph" icon="diagram-project" href="https://langchain-ai.github.io/langgraph/">
+    LangChain's graph-based agent orchestration
+  </Card>
+</CardGroup>
+
+<Warning>
+Agents are powerful but can be unpredictable. For a hackathon demo, a well-tuned RAG pipeline (like our demo) is often more reliable and impressive than a brittle agent chain. Add agents only if your use case truly needs multi-step reasoning.
+</Warning>
+
+## Free deployment and hosting
+
+Ship your project so judges (and the world) can use it. All of these have free tiers that are more than enough for a hackathon.
+
+| Platform | Best for | Free tier | URL |
+|----------|----------|-----------|-----|
+| **Hugging Face Spaces** | Gradio/Streamlit apps | Unlimited public spaces | [huggingface.co/spaces](https://huggingface.co/spaces) |
+| **Streamlit Cloud** | Streamlit apps with GitHub integration | 1 free app | [streamlit.io/cloud](https://streamlit.io/cloud) |
+| **Render** | Web services, APIs, databases | 750 hours/month | [render.com](https://render.com) |
+| **Railway** | Full-stack deployments | $5 credit/month | [railway.app](https://railway.app) |
+| **Vercel** | Frontends, serverless functions | Generous free tier | [vercel.com](https://vercel.com) |
+| **GitHub Pages** | Static sites, documentation | Unlimited | [pages.github.com](https://pages.github.com) |
+| **Replit** | Full dev environment + deployment | Free tier available | [replit.com](https://replit.com) |
+
+<Note>
+Our demo runs Ollama **locally**, which won't work on most cloud platforms. For deployment, you'll need to swap the local LLM for a cloud API (HuggingFace Inference, Groq, Together AI) or use a platform that supports custom containers.
+</Note>
+
+## Useful Python libraries
+
+These are the most common libraries you'll want to `pip install` during the hackathon, organized by what you're trying to do.
+
+### Data analysis and visualization
+
+| Library | What it does | Install |
+|---------|--------------|----------|
+| **pandas** | Data manipulation and analysis | `pip install pandas` |
+| **matplotlib** | Static charts and graphs | `pip install matplotlib` |
+| **plotly** | Interactive charts and dashboards | `pip install plotly` |
+| **seaborn** | Statistical visualizations | `pip install seaborn` |
+| **altair** | Declarative visualization (works great with Streamlit) | `pip install altair` |
+
+### File parsing
+
+| Library | What it does | Install |
+|---------|--------------|----------|
+| **pypdf** | Read and extract text from PDFs | `pip install pypdf` |
+| **python-docx** | Read and write Word documents | `pip install python-docx` |
+| **openpyxl** | Read and write Excel files | `pip install openpyxl` |
+| **docling** | Advanced document parsing (PDF, DOCX, PPTX, HTML, images) — RAG-optimized with layout understanding and OCR | `pip install docling` |
+| **beautifulsoup4** | Parse HTML and scrape web pages | `pip install beautifulsoup4` |
+
+### APIs and web
+
+| Library | What it does | Install |
+|---------|--------------|----------|
+| **requests** | Make HTTP requests (API calls, web scraping) | `pip install requests` |
+| **fastapi** | Build REST APIs quickly | `pip install fastapi uvicorn` |
+| **pydantic** | Data validation and settings management | `pip install pydantic` |
+| **httpx** | Modern async HTTP client | `pip install httpx` |
+
+### AI and ML
+
+| Library | What it does | Install |
+|---------|--------------|----------|
+| **transformers** | HuggingFace model library | `pip install transformers` |
+| **sentence-transformers** | Embeddings and semantic search | `pip install sentence-transformers` |
+| **scikit-learn** | Traditional ML algorithms | `pip install scikit-learn` |
+| **openai** | OpenAI API client (also works with compatible APIs) | `pip install openai` |
+
+## Learning resources
+
+Get up to speed quickly with these resources. Prioritize the ones marked with a star — they're the most immediately useful for this hackathon.
+
+### RAG and LLM applications
+
+- [LlamaIndex Starter Tutorial](https://docs.llamaindex.ai/en/stable/getting_started/) ⭐
+- [Ollama Model Library](https://ollama.com/library) ⭐
+- [LangChain Tutorials](https://python.langchain.com/docs/tutorials/)
+- [HuggingFace NLP Course](https://huggingface.co/learn/nlp-course)
+- RAG from Scratch (YouTube) — Search "RAG from scratch LangChain"
+
+### Model benchmarks and comparisons
+
+- [Artificial Analysis](https://artificialanalysis.ai) ⭐
+- [Open LLM Leaderboard](https://huggingface.co/spaces/open-llm-leaderboard/open_llm_leaderboard)
+- [LMSYS Chatbot Arena](https://lmarena.ai)
+
+### Curated lists
+
+- [awesome-langchain](https://github.com/kyrolabs/awesome-langchain)
+- [awesome-llm-agents](https://github.com/kaushikb11/awesome-llm-agents)
+- [AI Templates (Red Hat)](https://aitemplates.io)

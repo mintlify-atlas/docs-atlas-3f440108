@@ -1,0 +1,285 @@
+---
+title: EduHack dataset
+description: Boston Public Schools equity data covering achievement gaps, chronic absenteeism, technology access, staffing, and college readiness
+---
+
+The **EduHack dataset** (`eduhack_boston_schools.txt`) is a synthetic educational equity report for Boston Public Schools, 2024-2025. It contains detailed metrics on enrollment demographics, MCAS achievement gaps, chronic absenteeism, technology access, teacher staffing, and college readiness.
+
+## Dataset overview
+
+<Info>
+**File**: `data/eduhack_boston_schools.txt`  
+**Scope**: Boston Public Schools Educational Equity Report, 2024-2025  
+**Size**: ~51 lines, 22,000+ characters  
+**Format**: Plain text, structured report
+</Info>
+
+## Data sections
+
+<Tabs>
+  <Tab title="Enrollment & demographics">
+    ### District overview
+    
+    - **49,152 students** across 125 schools
+    - **78 home languages** represented
+    
+    **Demographics:**
+    - Hispanic/Latino: 43.8%
+    - Black: 29.1%
+    - White: 14.2%
+    - Asian: 8.9%
+    - Multiracial: 3.2%
+    
+    **Special populations:**
+    - Low-income families: 62%
+    - English Language Learners: 32.4%
+    - Special education services: 21.7%
+    - Experiencing homelessness: 4.8% (2,359 students)
+  </Tab>
+  
+  <Tab title="Achievement gaps">
+    ### MCAS proficiency rates (Grade 8)
+    
+    <Accordion title="Mathematics proficiency">
+      | Group | Proficiency rate | Gap vs. White |
+      |-------|------------------|---------------|
+      | Overall | 28% | — |
+      | Asian students | 58% | +6 pts |
+      | White students | 52% | Baseline |
+      | Hispanic/Latino | 16% | -36 pts |
+      | Black students | 14% | **-38 pts** |
+      | Low-income | 17% | -35 pts |
+      | Non-low-income | 51% | — |
+      | ELL students | 8% | -44 pts |
+      | Students w/ disabilities | 6% | -46 pts |
+    </Accordion>
+    
+    <Accordion title="English Language Arts proficiency">
+      | Group | Proficiency rate | Gap vs. White |
+      |-------|------------------|---------------|
+      | Overall | 37% | — |
+      | White students | 63% | Baseline |
+      | Asian students | 55% | -8 pts |
+      | Hispanic/Latino | 24% | -39 pts |
+      | Black students | 22% | **-41 pts** |
+      | Low-income | 25% | -38 pts |
+      | Non-low-income | 59% | — |
+      | ELL students | 5% | -58 pts |
+      | Students w/ disabilities | 9% | -54 pts |
+    </Accordion>
+    
+    **Trend**: White-Black gap in math (38 pts) has not narrowed in 5 years. ELL gap widened by 3 pts since 2022.
+  </Tab>
+  
+  <Tab title="Absenteeism">
+    ### Chronic absenteeism (missing 10%+ of school days)
+    
+    - District-wide: **38.2%** (up from 33% pre-pandemic)
+    
+    **Rates by demographic:**
+    - Students experiencing homelessness: 62%
+    - Black students: 44%
+    - Hispanic/Latino students: 41%
+    - White students: 28%
+    - Asian students: 22%
+    
+    **By level:**
+    - High schools: 47.3%
+    - Five schools exceed 55%
+    
+    **Key predictor**: Transportation — students with 45+ minute commutes are **2.3x more likely** to be chronically absent.
+  </Tab>
+  
+  <Tab title="Technology access">
+    ### Digital divide
+    
+    **Device access:**
+    - 1:1 device ratio achieved (one Chromebook per student)
+    
+    **Home internet gaps:**
+    - 18% of families: unreliable internet
+    - 7% of families: no home internet
+    - 8,200 families enrolled in Comcast Internet Essentials
+    - 3,400 eligible families remain unconnected
+    
+    **Digital literacy:**
+    - 34% of 6th graders cannot independently navigate educational software
+    - 45% of teachers feel "unprepared" to integrate AI tools
+  </Tab>
+  
+  <Tab title="Staffing & readiness">
+    ### Teacher vacancies and turnover
+    
+    - **127 vacancies** at start of SY2024-25 (5.2% vacancy rate)
+    
+    **Highest vacancy areas:**
+    - Special Education: 42 positions
+    - Math: 28 positions
+    - Science: 22 positions
+    - Bilingual Education: 19 positions
+    
+    **Demographic mismatch:**
+    - 64% of students are Black/Hispanic, but only 39% of teachers are people of color
+    
+    **Turnover hotspots:**
+    - Roxbury: 28% turnover
+    - Mattapan: 25% turnover
+    
+    ### College and career readiness
+    
+    - 4-year graduation rate: **75.2%** (up from 73.8%)
+    - 5-year rate: 80.1%
+    - Dropout rate: 5.8%
+    - College enrollment (within 12 months): 58%
+    - Persistence rate (2-year): 41%
+    - FAFSA completion: 52%
+    
+    **AP access and outcomes:**
+    - 78% have access to at least one AP course
+    - 22% actually enroll in AP
+    - AP pass rates: White 72%, Asian 68%, Black 31%, Hispanic/Latino 34%
+  </Tab>
+</Tabs>
+
+## Sample queries
+
+Here are the three built-in queries for the EduHack track:
+
+<CodeGroup>
+```bash Query 1: Achievement gaps
+python scripts/demo_step2_rag.py edu 1
+```
+
+```bash Query 2: Transportation impact
+python scripts/demo_step2_rag.py edu 2
+```
+
+```bash Query 3: Technology barriers
+python scripts/demo_step2_rag.py edu 3
+```
+</CodeGroup>
+
+### Query 1: What are the most significant achievement gaps in Boston public schools?
+
+This query surfaces:
+- Math: White-Black gap of 38 percentage points (52% vs. 14%)
+- ELA: White-Black gap of 41 percentage points (63% vs. 22%)
+- ELL students: 8% math proficiency, 5% ELA proficiency
+- Low-income vs. non-low-income: 34-point math gap, 34-point ELA gap
+- No improvement in 5 years for White-Black math gap
+
+### Query 2: How does transportation affect student attendance and outcomes?
+
+This query identifies:
+- Students with 45+ minute commutes: 2.3x more likely to be chronically absent
+- District-wide chronic absenteeism: 38.2%
+- High schools: 47.3% chronic absenteeism rate
+- Strongest predictor of absenteeism in the data
+- Superintendent recommendation to expand transportation options
+
+### Query 3: What technology access barriers exist for students and teachers?
+
+This query highlights:
+- 18% unreliable home internet, 7% no internet at all
+- 3,400 eligible families still unconnected despite Comcast partnership
+- 34% of 6th graders lack digital literacy to navigate educational software
+- 45% of teachers feel unprepared to integrate AI tools
+- 1:1 device ratio achieved but connectivity gaps remain
+
+## Key metrics reference
+
+<AccordionGroup>
+  <Accordion title="Achievement gaps by race/ethnicity (Math, Grade 8)">
+    | Student group | Proficiency | Gap vs. White | Gap vs. Overall |
+    |---------------|-------------|---------------|----------------|
+    | Asian | 58% | +6 pts | +30 pts |
+    | White | 52% | Baseline | +24 pts |
+    | Overall | 28% | — | Baseline |
+    | Low-income | 17% | -35 pts | -11 pts |
+    | Hispanic/Latino | 16% | -36 pts | -12 pts |
+    | Black | 14% | **-38 pts** | -14 pts |
+    | ELL | 8% | -44 pts | -20 pts |
+    | Students w/ disabilities | 6% | -46 pts | -22 pts |
+  </Accordion>
+  
+  <Accordion title="Chronic absenteeism rates">
+    | Group | Rate | Notes |
+    |-------|------|-------|
+    | Students experiencing homelessness | 62% | Highest impact |
+    | High schools (avg) | 47.3% | 5 schools >55% |
+    | Black students | 44% | — |
+    | Hispanic/Latino students | 41% | — |
+    | District-wide | 38.2% | Up from 33% pre-pandemic |
+    | White students | 28% | — |
+    | Asian students | 22% | Lowest rate |
+    | **45+ min commute** | **2.3x** | **Strongest predictor** |
+  </Accordion>
+  
+  <Accordion title="Technology access gaps">
+    | Metric | Value | Context |
+    |--------|-------|----------|
+    | Device ratio | 1:1 | One Chromebook per student |
+    | Unreliable home internet | 18% | — |
+    | No home internet | 7% | — |
+    | Comcast Essentials enrolled | 8,200 families | Partnership program |
+    | Eligible but unconnected | 3,400 families | Gap remains |
+    | 6th graders lacking digital literacy | 34% | Cannot navigate software |
+    | Teachers unprepared for AI tools | 45% | Professional development gap |
+  </Accordion>
+  
+  <Accordion title="Teacher staffing challenges">
+    | Metric | Value | Context |
+    |--------|-------|----------|
+    | Total vacancies (SY2024-25) | 127 | 5.2% vacancy rate |
+    | Special Education vacancies | 42 | Highest need area |
+    | Math vacancies | 28 | — |
+    | Science vacancies | 22 | — |
+    | Bilingual Education vacancies | 19 | — |
+    | Students of color | 64% | Black + Hispanic/Latino |
+    | Teachers of color | 39% | Demographic mismatch |
+    | Roxbury turnover | 28% | Highest in district |
+    | Mattapan turnover | 25% | Second highest |
+  </Accordion>
+</AccordionGroup>
+
+## Using this dataset in the web app
+
+When you select **EduHack** in the Gradio app (Step 3), the interface displays:
+
+- **Header**: "📚 EduHack — Analyze Boston public schools equity, achievement gaps, and student outcomes data"
+- **Example questions**: All three queries above as clickable examples
+- **Chat responses**: AI answers grounded in the specific metrics from this dataset
+
+<Tip>
+Try asking follow-up questions like "Which schools have the highest absenteeism?" or "What interventions does the superintendent recommend?" to explore the data interactively.
+</Tip>
+
+## Querying from code
+
+Here's how the RAG pipeline loads and queries this dataset:
+
+```python
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
+from llama_index.llms.ollama import Ollama
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+
+# Configure local AI
+Settings.llm = Ollama(model="llama3.1", request_timeout=120.0)
+Settings.embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L6-v2")
+
+# Load the EduHack dataset
+data_file = "data/eduhack_boston_schools.txt"
+documents = SimpleDirectoryReader(input_files=[data_file]).load_data()
+
+# Build vector index
+index = VectorStoreIndex.from_documents(documents)
+query_engine = index.as_query_engine(streaming=True, similarity_top_k=3)
+
+# Query
+response = query_engine.query(
+    "What are the most significant achievement gaps in Boston public schools?"
+)
+response.print_response_stream()
+```
+
+See [Step 2: RAG with civic data](/tutorial/step2-rag) for the full implementation.

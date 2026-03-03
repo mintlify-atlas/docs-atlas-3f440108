@@ -1,0 +1,237 @@
+---
+title: CityHack dataset
+description: Boston 311 service request analysis covering request volumes, response times, geographic disparities, staffing, and language access
+---
+
+The **CityHack dataset** (`cityhack_boston_311.txt`) is a synthetic 311 service request analysis for Boston, 2025. It contains detailed metrics on service volumes, resolution times, geographic equity gaps, staffing challenges, language access, and open issues.
+
+## Dataset overview
+
+<Info>
+**File**: `data/cityhack_boston_311.txt`  
+**Scope**: City of Boston 311 Service Request Analysis, 2025  
+**Size**: ~31 lines, 13,800+ characters  
+**Format**: Plain text, structured report
+</Info>
+
+## Data sections
+
+<Tabs>
+  <Tab title="Overview">
+    ### System-wide metrics
+    
+    - **487,293 service requests** processed in 2025 (+12% YoY)
+    - Average resolution time: **8.4 days** (up from 7.1 days in 2024)
+    - Customer satisfaction: **3.2/5 stars** (down from 3.5 in 2024)
+    
+    **Request channels:**
+    - Phone: 38%
+    - Mobile app: 34%
+    - Web portal: 22%
+    - Twitter/social media: 6%
+  </Tab>
+  
+  <Tab title="Top categories">
+    ### Top 5 request categories
+    
+    | Category | Volume | Avg resolution | Key insight |
+    |----------|--------|----------------|-------------|
+    | Street Cleaning & Litter | 67,421 | 3.2 days | 45% from Dorchester, Roxbury, Allston-Brighton |
+    | Pothole Repair | 52,388 | 11.7 days | 23% duplicate reports, Feb-Mar backlog |
+    | Code Enforcement | 48,102 | 22.3 days | 400% spike Sept 1 & May 31 in Allston-Brighton |
+    | Street Light Outages | 41,756 | 14.8 days | Mattapan/Dorchester: 21+ days avg |
+    | Tree Maintenance | 38,291 | 45.2 days | Emergency: 2.1 days, routine: 6+ months backlog |
+  </Tab>
+  
+  <Tab title="Geographic disparities">
+    ### Resolution times by neighborhood
+    
+    <Accordion title="High-income neighborhoods">
+      | Neighborhood | Avg resolution | Satisfaction |
+      |--------------|----------------|-------------|
+      | Back Bay / Beacon Hill | 4.2 days | 4.1/5 |
+      | South Boston Waterfront | 5.8 days | 3.8/5 |
+    </Accordion>
+    
+    <Accordion title="Lower-income neighborhoods">
+      | Neighborhood | Avg resolution | Satisfaction |
+      |--------------|----------------|-------------|
+      | Mattapan | 14.1 days | 2.4/5 |
+      | Roxbury | 12.4 days | 2.7/5 |
+      | Dorchester (Fields Corner) | 11.8 days | 2.9/5 |
+    </Accordion>
+    
+    **Key disparity**: Neighborhoods with median income &lt;$45K experience resolution times **2.8x longer** than neighborhoods with median income &gt;$100K.
+  </Tab>
+  
+  <Tab title="Staffing & language">
+    ### Staffing challenges
+    
+    - 42 full-time + 15 part-time call center agents
+    - Average wait time: **7.8 minutes** (up from 4.2 minutes)
+    - Abandonment rate: **22%** (up from 15%)
+    - FY2025 budget: $4.8M (3% decrease inflation-adjusted)
+    - Unfunded request: AI triage system + multilingual chatbot
+    
+    ### Language access
+    
+    **Non-English requests:**
+    - Spanish: 8.2%
+    - Haitian Creole: 4.1%
+    - Chinese: 2.8%
+    - Vietnamese: 1.9%
+    - Portuguese: 1.4%
+    - Cape Verdean Creole: 0.9%
+    
+    **Access gaps:**
+    - Translation available for phone, not app/web
+    - Non-English requests: **32% longer** resolution time
+    - 18% lower resolution rate in non-English-speaking areas
+  </Tab>
+  
+  <Tab title="Open issues">
+    ### Backlog as of Dec 31, 2025
+    
+    - **12,847 open requests** older than 30 days
+    
+    **Top overdue categories:**
+    1. Tree Maintenance: 4,210 requests
+    2. Code Enforcement: 3,102 requests
+    3. Street Light Outages: 2,891 requests
+    4. Sidewalk Repair: 1,644 requests
+    
+    **Oldest open request**: Sidewalk repair in Mattapan from March 2024
+  </Tab>
+</Tabs>
+
+## Sample queries
+
+Here are the three built-in queries for the CityHack track:
+
+<CodeGroup>
+```bash Query 1: Response time equity
+python scripts/demo_step2_rag.py city 1
+```
+
+```bash Query 2: Language access gaps
+python scripts/demo_step2_rag.py city 2
+```
+
+```bash Query 3: Systemic inequity patterns
+python scripts/demo_step2_rag.py city 3
+```
+</CodeGroup>
+
+### Query 1: Which neighborhoods have the longest 311 response times and what are the equity implications?
+
+This query surfaces:
+- Mattapan: 14.1 days (vs. 4.2 in Back Bay)
+- Roxbury: 12.4 days
+- Dorchester: 11.8 days
+- Income correlation: 2.8x longer times in &lt;$45K income areas
+- Satisfaction scores: 2.4-2.9 vs. 4.1 in high-income areas
+
+### Query 2: What are the biggest service gaps for non-English speaking residents?
+
+This query identifies:
+- 32% longer resolution times for non-English requests
+- Translation only available for phone (not app/web)
+- 18% lower resolution rate in non-English areas
+- Spanish (8.2%), Haitian Creole (4.1%), Chinese (2.8%) top languages
+- Unfunded multilingual chatbot request
+
+### Query 3: What patterns suggest systemic inequity in city service delivery?
+
+This query highlights:
+- 2.8x resolution time gap by income
+- Mattapan street light outages: 21+ days (vs. citywide 14.8)
+- 45% of street cleaning requests from 3 neighborhoods (Dorchester, Roxbury, Allston-Brighton)
+- Non-English areas: 18% lower resolution rate
+- 22% call abandonment rate (up from 15%)
+
+## Key metrics reference
+
+<AccordionGroup>
+  <Accordion title="Resolution time disparities">
+    | Metric | High-income areas | Low-income areas | Multiplier |
+    |--------|-------------------|------------------|------------|
+    | Avg resolution | 4.2-5.8 days | 11.8-14.1 days | 2.8x |
+    | Customer satisfaction | 3.8-4.1/5 | 2.4-2.9/5 | -31% to -42% |
+    | Income threshold | &gt;$100K median | &lt;$45K median | — |
+  </Accordion>
+  
+  <Accordion title="Request volumes by category">
+    | Category | 2025 requests | Avg resolution | Notes |
+    |----------|---------------|----------------|-------|
+    | Street Cleaning | 67,421 | 3.2 days | Peak: Apr-Jun |
+    | Pothole Repair | 52,388 | 11.7 days | 23% duplicates |
+    | Code Enforcement | 48,102 | 22.3 days | Student move spikes |
+    | Street Lights | 41,756 | 14.8 days | 15% repeat reports |
+    | Tree Maintenance | 38,291 | 45.2 days | 6+ month routine backlog |
+  </Accordion>
+  
+  <Accordion title="Language access metrics">
+    | Language | % of requests | Resolution time impact |
+    |----------|---------------|------------------------|
+    | English | 85.6% | Baseline |
+    | Spanish | 8.2% | +32% |
+    | Haitian Creole | 4.1% | +32% |
+    | Chinese | 2.8% | +32% |
+    | Vietnamese | 1.9% | +32% |
+    | Portuguese | 1.4% | +32% |
+    
+    **Gap**: Translation services unavailable on mobile app and web portal (56% of requests).
+  </Accordion>
+  
+  <Accordion title="Staffing and budget">
+    | Metric | 2024 | 2025 | Change |
+    |--------|------|------|--------|
+    | Full-time agents | — | 42 | — |
+    | Part-time agents | — | 15 | — |
+    | Avg wait time | 4.2 min | 7.8 min | +86% |
+    | Abandonment rate | 15% | 22% | +47% |
+    | Budget | — | $4.8M | -3% (inflation-adjusted) |
+  </Accordion>
+</AccordionGroup>
+
+## Using this dataset in the web app
+
+When you select **CityHack** in the Gradio app (Step 3), the interface displays:
+
+- **Header**: "🏙️ CityHack — Analyze Boston 311 service requests, equity gaps, and service delivery patterns"
+- **Example questions**: All three queries above as clickable examples
+- **Chat responses**: AI answers grounded in the specific metrics from this dataset
+
+<Tip>
+Try asking follow-up questions like "Why does Mattapan have such long wait times?" or "What's causing the code enforcement spikes?" to explore the data interactively.
+</Tip>
+
+## Querying from code
+
+Here's how the RAG pipeline loads and queries this dataset:
+
+```python
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
+from llama_index.llms.ollama import Ollama
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+
+# Configure local AI
+Settings.llm = Ollama(model="llama3.1", request_timeout=120.0)
+Settings.embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L6-v2")
+
+# Load the CityHack dataset
+data_file = "data/cityhack_boston_311.txt"
+documents = SimpleDirectoryReader(input_files=[data_file]).load_data()
+
+# Build vector index
+index = VectorStoreIndex.from_documents(documents)
+query_engine = index.as_query_engine(streaming=True, similarity_top_k=3)
+
+# Query
+response = query_engine.query(
+    "Which neighborhoods have the longest 311 response times and what are the equity implications?"
+)
+response.print_response_stream()
+```
+
+See [Step 2: RAG with civic data](/tutorial/step2-rag) for the full implementation.

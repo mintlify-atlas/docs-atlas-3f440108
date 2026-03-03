@@ -1,0 +1,223 @@
+---
+title: Swap in your own data
+description: Replace the demo datasets with your own files to build a custom civic AI application
+---
+
+The CivicHacks demo comes with four civic datasets, but you can easily swap them out with your own data. The RAG pipeline supports multiple file formats and works with any text-based content.
+
+## Supported file types
+
+The demo supports these file formats out of the box:
+
+| Format | Extension | Notes |
+|--------|-----------|-------|
+| Plain text | `.txt` | Simplest option, used in the demo |
+| PDF documents | `.pdf` | Requires `llama-index-readers-file` (already in requirements) |
+| CSV spreadsheets | `.csv` | Read as text content |
+| Word documents | `.docx` | Requires `llama-index-readers-file` |
+| Web pages | N/A | Use `SimpleWebPageReader` from LlamaIndex |
+
+<Note>
+The `llama-index-readers-file` package is already included in `requirements.txt`, so PDF and DOCX support is ready to use.
+</Note>
+
+## Quick start: Bring your own data
+
+The fastest way to try your own data is with the BYOD (Bring Your Own Data) scripts:
+
+<Steps>
+  <Step title="Drop files into userdata/">
+    Place your files in the `userdata/` directory:
+    
+    ```bash
+    cp ~/Downloads/my-report.pdf userdata/
+    ```
+  </Step>
+  
+  <Step title="Run the BYOD script">
+    The script auto-discovers files in `userdata/`:
+    
+    ```bash
+    # Auto-discover and select from available files
+    python scripts/demo_step4_byod.py
+    
+    # Or specify a file directly
+    python scripts/demo_step4_byod.py path/to/your/file.txt
+    
+    # Load ALL files for cross-document exploration
+    python scripts/demo_step4_byod.py --all
+    ```
+  </Step>
+  
+  <Step title="Use the web interface">
+    For a browser-based experience with drag-and-drop:
+    
+    ```bash
+    python scripts/demo_step5_byod_app.py
+    ```
+    
+    Upload files directly in the browser at `http://localhost:8861`
+  </Step>
+</Steps>
+
+## Replace the demo datasets
+
+To customize the track-specific data used in Steps 2 and 3, replace the files in the `data/` directory:
+
+<Steps>
+  <Step title="Add your data files">
+    Place your files in the `data/` directory:
+    
+    ```bash
+    # Example: Replace the city track data
+    cp my-city-data.txt data/cityhack_boston_311.txt
+    ```
+    
+    Or add new files:
+    
+    ```bash
+    cp my-budget-report.pdf data/budget_track.pdf
+    ```
+  </Step>
+  
+  <Step title="Update track configuration in demo_step2_rag.py">
+    Edit the `TRACKS` dictionary to reference your new files:
+    
+    ```python scripts/demo_step2_rag.py
+    TRACKS = {
+        "eco": {
+            "name": "🌿 EcoHack",
+            "file": "ecohack_boston_environment.txt",
+            "queries": [
+                "Which neighborhoods have the worst air quality?",
+                # ... more queries
+            ],
+        },
+        "budget": {  # New track
+            "name": "💰 Budget Analysis",
+            "file": "budget_track.pdf",
+            "queries": [
+                "What are the biggest budget increases this year?",
+                "Which departments face funding cuts?",
+                "How does this budget address equity concerns?",
+            ],
+        },
+    }
+    ```
+  </Step>
+  
+  <Step title="Update track configuration in demo_step3_app.py">
+    Update three dictionaries in the web app script:
+    
+    ```python scripts/demo_step3_app.py
+    TRACKS = {
+        "🌿 EcoHack — Boston Environment": "ecohack_boston_environment.txt",
+        "💰 Budget Analysis": "budget_track.pdf",  # Add your track
+    }
+    
+    TRACK_DESCRIPTIONS = {
+        "💰 Budget Analysis": "Analyze the city budget, funding priorities, and equity.",
+    }
+    
+    EXAMPLE_QUESTIONS = {
+        "💰 Budget Analysis": [
+            "What are the biggest budget increases?",
+            "Which departments face cuts?",
+            "How is equity addressed in funding decisions?",
+        ],
+    }
+    ```
+  </Step>
+</Steps>
+
+## Load data from web pages
+
+You can also load data directly from web pages using LlamaIndex's `SimpleWebPageReader`:
+
+<CodeGroup>
+```python Before
+from llama_index.core import SimpleDirectoryReader
+
+documents = SimpleDirectoryReader(input_files=[str(data_file)]).load_data()
+```
+
+```python After
+from llama_index.core import SimpleWebPageReader
+
+# Load from a single URL
+loader = SimpleWebPageReader()
+documents = loader.load_data(["https://data.boston.gov/dataset/..."])
+
+# Or load from multiple URLs
+urls = [
+    "https://example.com/report1",
+    "https://example.com/report2",
+]
+documents = loader.load_data(urls)
+```
+</CodeGroup>
+
+<Tip>
+When loading web pages, the reader extracts visible text content. For best results, use pages with clean, well-structured text rather than heavily dynamic JavaScript applications.
+</Tip>
+
+## Multi-file exploration
+
+The BYOD scripts support loading multiple files into a single index for cross-document analysis:
+
+```bash
+# Load ALL files in userdata/ directory
+python scripts/demo_step4_byod.py --all
+```
+
+This builds one unified vector index, enabling questions like:
+
+- "Compare the findings across these reports"
+- "What themes are common across all documents?"
+- "Which report mentions climate change most?"
+
+<Note>
+The auto-discovery logic works as follows:
+
+| Files in userdata/ | Behavior |
+|--------------------|----------|
+| 0 files | Prompts for a file path |
+| 1 file | Automatically uses that file |
+| 2+ files | Shows a numbered list to pick from (or type `a` to load all) |
+| `--all` flag | Loads every file into a single combined index |
+</Note>
+
+## File validation
+
+The BYOD scripts validate files before processing:
+
+- **File existence**: Checks that the path is valid
+- **Extension check**: Ensures the file type is supported
+- **Size limits**: Validates reasonable file sizes
+- **Graceful errors**: Skips unreadable files when loading multiple documents
+
+You'll see detailed file analysis including:
+
+```
+────────────────────────────────────────────────────────────
+  File Analysis
+────────────────────────────────────────────────────────────
+
+   File:      boston_budget_2026.pdf
+   Type:      PDF document
+   Size:      2.4 MB
+   Modified:  February 18, 2026
+
+   Content:   3 document(s), 45,230 characters, ~8,120 words
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Change the AI model" icon="brain" href="/guides/change-model">
+    Try different models for speed or quality
+  </Card>
+  <Card title="Customize the UI" icon="palette" href="/guides/customize-ui">
+    Modify the Gradio interface appearance
+  </Card>
+</CardGroup>

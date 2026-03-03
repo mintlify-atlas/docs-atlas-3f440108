@@ -1,0 +1,402 @@
+---
+title: Customize the Gradio UI
+description: Modify the web interface appearance, layout, and behavior
+---
+
+The CivicHacks demo uses Gradio to create a polished web interface. You can customize the theme, colors, layout, and components to match your project's branding.
+
+## Theme customization
+
+Gradio provides built-in themes that you can customize with your own colors:
+
+### Change the theme
+
+<CodeGroup>
+```python Before - scripts/demo_step3_app.py
+THEME = gr.themes.Soft(primary_hue="red", secondary_hue="slate")
+
+app.launch(
+    server_name="0.0.0.0",
+    server_port=args.port,
+    share=args.share,
+    theme=THEME,
+    css=CSS,
+)
+```
+
+```python After - Blue theme
+THEME = gr.themes.Soft(primary_hue="blue", secondary_hue="gray")
+
+app.launch(
+    server_name="0.0.0.0",
+    server_port=args.port,
+    share=args.share,
+    theme=THEME,
+    css=CSS,
+)
+```
+
+```python After - Dark theme
+THEME = gr.themes.Glass(
+    primary_hue="emerald",
+    secondary_hue="slate",
+).set(
+    body_background_fill="*neutral_900",
+    body_text_color="*neutral_100",
+)
+
+app.launch(
+    server_name="0.0.0.0",
+    server_port=args.port,
+    share=args.share,
+    theme=THEME,
+    css=CSS,
+)
+```
+</CodeGroup>
+
+The theme is defined at line 210 and applied at line 289 in `scripts/demo_step3_app.py`.
+
+<Note>
+Available theme bases:
+- `gr.themes.Soft` - Rounded corners, soft shadows (used in demo)
+- `gr.themes.Glass` - Glassmorphism effect
+- `gr.themes.Monochrome` - Black and white
+- `gr.themes.Base` - Minimal default styling
+</Note>
+
+### Available color hues
+
+Gradio supports these built-in color options:
+
+- `red` (demo default)
+- `blue`
+- `green`
+- `yellow`
+- `orange`
+- `pink`
+- `purple`
+- `gray`
+- `slate`
+- `zinc`
+- `emerald`
+- `teal`
+- `cyan`
+- `sky`
+- `indigo`
+- `violet`
+- `fuchsia`
+- `rose`
+
+## Custom CSS styling
+
+The demo includes custom CSS for header and footer styling:
+
+<CodeGroup>
+```python Before - scripts/demo_step3_app.py
+CSS = """
+    .header { text-align: center; margin-bottom: 1rem; }
+    .header h1 { color: #CC0000; margin-bottom: 0.25rem; }
+    .header h3 { color: #555; margin-top: 0; margin-bottom: 0.5rem; font-weight: normal; }
+    .footer { text-align: center; font-size: 0.85rem; color: #888; margin-top: 1rem; }
+"""
+```
+
+```python After - Custom branding
+CSS = """
+    .header {
+        text-align: center;
+        margin-bottom: 1rem;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+    }
+    .header h1 {
+        color: white;
+        margin-bottom: 0.5rem;
+        font-size: 2.5rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    .header h3 {
+        color: #f0f0f0;
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        font-weight: 300;
+    }
+    .header p {
+        color: #ffffff;
+        opacity: 0.9;
+    }
+    .footer {
+        text-align: center;
+        font-size: 0.85rem;
+        color: #888;
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e0e0e0;
+    }
+"""
+```
+</CodeGroup>
+
+The CSS is defined at line 211-216 and applied at line 290 in `scripts/demo_step3_app.py`.
+
+## Modify the header
+
+The dynamic header updates when users switch tracks:
+
+<CodeGroup>
+```python Before - scripts/demo_step3_app.py
+def build_header_html(track_name):
+    """Build the header HTML for a given track."""
+    desc = TRACK_DESCRIPTIONS.get(track_name, "")
+    return f"""
+    <div class="header">
+        <h1>🏛️ CivicHacks AI Assistant</h1>
+        <h3>{track_name}</h3>
+        <p>{desc}<br>
+        Powered by <strong>open source AI</strong> running locally on <strong>{HOSTNAME}</strong><br>
+        <em>Started: {STARTED_AT}</em> — no cloud, no cost, no data leaving this machine.</p>
+    </div>
+    """
+```
+
+```python After - Custom branding
+def build_header_html(track_name):
+    """Build the header HTML for a given track."""
+    desc = TRACK_DESCRIPTIONS.get(track_name, "")
+    return f"""
+    <div class="header">
+        <h1>🚀 My City AI</h1>
+        <h3>{track_name}</h3>
+        <p>{desc}</p>
+        <p style="font-size: 0.9rem; margin-top: 1rem;">
+        <strong>100% Private</strong> • Running on {HOSTNAME} • Started {STARTED_AT}
+        </p>
+    </div>
+    """
+```
+</CodeGroup>
+
+The `build_header_html` function is at line 130-141 in `scripts/demo_step3_app.py`.
+
+## Customize track descriptions
+
+Update the descriptions shown when users switch tracks:
+
+```python scripts/demo_step3_app.py
+TRACK_DESCRIPTIONS = {
+    "🌿 EcoHack — Boston Environment": "Explore Boston's environmental quality, climate risks, and environmental justice data.",
+    "🏙️ CityHack — Boston 311 Services": "Analyze Boston 311 service requests, response times, and equity in city services.",
+    "📚 EduHack — Boston Public Schools": "Investigate achievement gaps, transportation barriers, and equity in Boston schools.",
+    "⚖️ JusticeHack — MA Criminal Justice": "Examine pretrial detention, reentry programs, and policing patterns in Massachusetts.",
+}
+```
+
+Replace with your own descriptions to match your data and use case.
+
+## Modify example questions
+
+The clickable example questions update dynamically per track:
+
+<CodeGroup>
+```python Before - scripts/demo_step3_app.py
+EXAMPLE_QUESTIONS = {
+    "🌿 EcoHack — Boston Environment": [
+        "Which neighborhoods face the worst environmental injustice?",
+        "What are the biggest climate threats to Boston?",
+        "How does tree canopy coverage affect neighborhood temperatures?",
+    ],
+}
+```
+
+```python After - Custom questions
+EXAMPLE_QUESTIONS = {
+    "🌿 EcoHack — Boston Environment": [
+        "What are the main sources of air pollution?",
+        "Which areas need more green space?",
+        "How can we improve water quality?",
+        "What climate resilience projects are planned?",
+    ],
+}
+```
+</CodeGroup>
+
+Update the `EXAMPLE_QUESTIONS` dictionary at line 63-84 in `scripts/demo_step3_app.py`.
+
+## Change the chatbot appearance
+
+Customize the chat interface:
+
+<CodeGroup>
+```python Before - scripts/demo_step3_app.py
+chatbot = gr.Chatbot(
+    label="Civic AI Chat",
+    height=420,
+    avatar_images=(None, "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Red_Hat_logo.svg/120px-Red_Hat_logo.svg.png"),
+)
+```
+
+```python After - Custom avatars and height
+chatbot = gr.Chatbot(
+    label="Ask Me Anything",
+    height=600,  # Taller chat window
+    avatar_images=(
+        "https://example.com/user-avatar.png",  # User avatar
+        "https://example.com/bot-avatar.png",   # Bot avatar
+    ),
+)
+```
+</CodeGroup>
+
+The chatbot component is defined at line 231-235 in `scripts/demo_step3_app.py`.
+
+<Tip>
+You can use emoji as avatars by passing a single emoji character instead of a URL:
+
+```python
+avatar_images=("👤", "🤖")
+```
+</Tip>
+
+## Modify the footer
+
+Update the footer content:
+
+<CodeGroup>
+```python Before - scripts/demo_step3_app.py
+gr.HTML(f"""
+<div class="footer">
+    <strong>Stack:</strong> Ollama + LlamaIndex + Gradio ·
+    <strong>Model:</strong> Llama 3.1 8B ·
+    <strong>Host:</strong> {HOSTNAME} ·
+    <strong>Data Privacy:</strong> 100% local ·
+    <strong>Cost:</strong> per-query estimate shown in each response<br>
+    Built for <strong>CivicHacks 2026</strong> at Boston University ·
+    Templates at <a href="https://aitemplates.io" target="_blank">aitemplates.io</a>
+</div>
+""")
+```
+
+```python After - Custom footer
+gr.HTML(f"""
+<div class="footer">
+    <p><strong>My City AI</strong> — Powered by open source technology</p>
+    <p>Running on {HOSTNAME} • All data stays on your device</p>
+    <p><a href="https://yourproject.com">Learn More</a> |
+       <a href="https://github.com/yourorg/yourrepo">GitHub</a></p>
+</div>
+""")
+```
+</CodeGroup>
+
+The footer HTML is at line 252-261 in `scripts/demo_step3_app.py`.
+
+## Change input placeholder text
+
+Customize the question input field:
+
+```python scripts/demo_step3_app.py
+question_input = gr.Textbox(
+    label="Your Question",
+    placeholder="Ask anything about the civic data...",  # Change this
+    scale=4,
+    lines=1,
+)
+```
+
+Update to match your use case:
+
+```python
+placeholder="What would you like to know about your city?"
+```
+
+## Adjust layout and sizing
+
+Modify component sizes and arrangement:
+
+<Steps>
+  <Step title="Change chatbot height">
+    ```python
+    chatbot = gr.Chatbot(
+        height=600,  # Increase from 420 to 600
+    )
+    ```
+  </Step>
+  
+  <Step title="Adjust input/button ratio">
+    ```python
+    with gr.Row():
+        question_input = gr.Textbox(
+            scale=5,  # Changed from 4 (wider input)
+        )
+        submit_btn = gr.Button(
+            "Ask",
+            variant="primary",
+            scale=1,  # Button stays small
+        )
+    ```
+  </Step>
+  
+  <Step title="Reorder components">
+    Move the track selector below the chat:
+    
+    ```python
+    with gr.Blocks(title="CivicHacks AI Assistant") as app:
+        header = gr.HTML(build_header_html(default_track))
+        
+        chatbot = gr.Chatbot(...)
+        
+        # Move track selector here (after chat)
+        with gr.Row():
+            track_selector = gr.Dropdown(...)
+    ```
+  </Step>
+</Steps>
+
+## Update page title
+
+Change the browser tab title:
+
+```python scripts/demo_step3_app.py
+with gr.Blocks(title="CivicHacks AI Assistant") as app:  # Change this
+```
+
+Update to your project name:
+
+```python
+with gr.Blocks(title="My City AI") as app:
+```
+
+## Dynamic updates on track change
+
+The demo updates the header and examples when users switch tracks. This happens in the `on_track_change` function:
+
+```python scripts/demo_step3_app.py
+def on_track_change(track_name):
+    """Update header and example questions when track changes."""
+    header = build_header_html(track_name)
+    questions = EXAMPLE_QUESTIONS.get(track_name, [])
+    dataset = gr.Dataset(samples=[[q] for q in questions])
+    return header, dataset
+
+# Wire it up
+track_selector.change(
+    fn=on_track_change,
+    inputs=[track_selector],
+    outputs=[header, examples.dataset],
+)
+```
+
+You can extend this to update other components when the track changes.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Swap in your own data" icon="database" href="/guides/swap-data">
+    Replace the demo datasets with your files
+  </Card>
+  <Card title="Change the AI model" icon="brain" href="/guides/change-model">
+    Try different models for speed or quality
+  </Card>
+</CardGroup>

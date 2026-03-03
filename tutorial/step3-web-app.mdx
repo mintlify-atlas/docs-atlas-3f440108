@@ -1,0 +1,321 @@
+---
+title: 'Step 3: Gradio web application'
+description: 'Wrap the RAG pipeline in a shareable web interface — from script to web app in 5 lines of UI code'
+---
+
+## Overview
+
+This step wraps the RAG pipeline in a polished Gradio-based chat interface. You'll see that building a shareable web application takes minutes, not days.
+
+**Duration:** ~60 seconds to launch
+
+**What you'll get:**
+- A browser-based chat interface with message history
+- Track selector dropdown (switch between all four datasets)
+- Dynamic header and example questions that update when you switch tracks
+- Per-query cost comparison (local electricity vs. cloud API)
+- Red Hat-themed styling with soft colors
+
+## Prerequisites
+
+Complete [Step 2: RAG with Civic Data](/tutorial/step2-rag) first, then install Gradio:
+
+```bash
+pip install gradio>=5.0.0
+```
+
+## Running the app
+
+### Basic usage
+
+```bash
+python scripts/demo_step3_app.py
+```
+
+The app starts on `http://localhost:7860` and should open automatically in your default browser.
+
+### Command-line options
+
+```bash
+# Launch on default port 7860
+python scripts/demo_step3_app.py
+
+# Launch on custom port
+python scripts/demo_step3_app.py --port 8080
+
+# Create a public URL via Gradio's tunneling service
+python scripts/demo_step3_app.py --share
+
+# Show all options
+python scripts/demo_step3_app.py --help
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--port` | `7860` | HTTP port for the web UI |
+| `--share` | off | Create a temporary public URL via Gradio's tunneling service |
+
+<Tip>
+  The `--share` flag creates a temporary public URL (valid ~72 hours) that you can share with judges or remote participants.
+</Tip>
+
+## UI components
+
+The web app includes these interactive elements:
+
+### Header
+
+**Dynamic header** that updates when you switch tracks, showing:
+- "CivicHacks AI Assistant" title
+- Current track name (e.g., "🏙️ CityHack — Boston 311 Services")
+- Track description
+- Hostname and start time (proves it's running locally)
+- Privacy note: "no cloud, no cost, no data leaving this machine"
+
+### Track selector
+
+**Dropdown menu** to switch between:
+- 🌿 EcoHack — Boston Environment
+- 🏙️ CityHack — Boston 311 Services
+- 📚 EduHack — Boston Public Schools
+- ⚖️ JusticeHack — MA Criminal Justice
+
+Switching tracks updates the header, description, and example questions instantly.
+
+### Chat interface
+
+**Message-style chat** with:
+- User/assistant bubbles
+- Red Hat avatar for assistant responses
+- Message history preserved during the session
+- Each response includes timing and cost comparison
+
+### Example questions
+
+**Clickable example questions** that auto-populate the input field. These update dynamically when the track changes:
+
+**CityHack examples:**
+- Which neighborhoods wait longest for city services?
+- What equity gaps exist in 311 service delivery?
+- How are non-English speakers underserved?
+
+**EcoHack examples:**
+- Which neighborhoods face the worst environmental injustice?
+- What are the biggest climate threats to Boston?
+- How does tree canopy coverage affect neighborhood temperatures?
+
+**EduHack examples:**
+- What are the biggest achievement gaps by race?
+- How does transportation affect student attendance?
+- What barriers exist for English Language Learners?
+
+**JusticeHack examples:**
+- What racial disparities exist in pretrial detention?
+- How effective are reentry programs?
+- What patterns appear in Boston police stop data?
+
+### Footer
+
+Shows the full open source stack and privacy information:
+- **Stack:** Ollama + LlamaIndex + Gradio
+- **Model:** Llama 3.1 8B
+- **Host:** [your hostname]
+- **Data Privacy:** 100% local
+- **Cost:** per-query estimate shown in each response
+
+## How it works
+
+The app uses these key components:
+
+<Steps>
+  <Step title="Global index cache">
+    Built indices are cached in a `dict` so switching tracks after the first load is instant:
+
+    ```python
+    indices = {}  # Cache built indices
+
+    def build_index(track_name):
+        if track_name in indices:
+            return indices[track_name]
+
+        # Build and cache new index
+        index = VectorStoreIndex.from_documents(documents)
+        indices[track_name] = index
+        return index
+    ```
+  </Step>
+
+  <Step title="Query function">
+    Appends user message to chat history, queries the cached index, appends AI response with timing and cost metadata:
+
+    ```python
+    def query_civic_data(question, track_name, history):
+        history = history + [{"role": "user", "content": question}]
+
+        index = build_index(track_name)
+        query_engine = index.as_query_engine(similarity_top_k=3)
+
+        start = time.time()
+        response = query_engine.query(question)
+        elapsed = time.time() - start
+
+        answer = str(response)
+        cost_info = format_cost_short(elapsed, est_input_tokens, est_output_tokens)
+        answer += f"\n\n---\n*⏱️ {elapsed:.1f}s · 🤖 llama3.1 on {HOSTNAME} · 💰 {cost_info}*"
+
+        history = history + [{"role": "assistant", "content": answer}]
+        return history, ""
+    ```
+  </Step>
+
+  <Step title="Dynamic header and examples">
+    Updates header HTML and example questions when the track selector changes:
+
+    ```python
+    def on_track_change(track_name):
+        header = build_header_html(track_name)
+        questions = EXAMPLE_QUESTIONS.get(track_name, [])
+        dataset = gr.Dataset(samples=[[q] for q in questions])
+        return header, dataset
+
+    track_selector.change(
+        fn=on_track_change,
+        inputs=[track_selector],
+        outputs=[header, examples.dataset],
+    )
+    ```
+  </Step>
+
+  <Step title="Gradio UI">
+    Built using `gr.Blocks` with a `Soft` theme and custom CSS:
+
+    ```python
+    THEME = gr.themes.Soft(primary_hue="red", secondary_hue="slate")
+    CSS = """
+        .header { text-align: center; margin-bottom: 1rem; }
+        .header h1 { color: #CC0000; margin-bottom: 0.25rem; }
+    """
+
+    with gr.Blocks(title="CivicHacks AI Assistant") as app:
+        header = gr.HTML(build_header_html(default_track))
+        track_selector = gr.Dropdown(choices=list(TRACKS.keys()), ...)
+        chatbot = gr.Chatbot(height=420, ...)
+        question_input = gr.Textbox(...)
+        submit_btn = gr.Button("Ask", variant="primary")
+        examples = gr.Examples(examples=..., inputs=[question_input])
+
+        submit_btn.click(fn=query_civic_data, ...)
+
+    app.launch(server_name="0.0.0.0", server_port=7860, theme=THEME, css=CSS)
+    ```
+  </Step>
+</Steps>
+
+## Customizing the theme
+
+The Gradio theme is set with:
+
+```python
+THEME = gr.themes.Soft(primary_hue="red", secondary_hue="slate")
+```
+
+Change `primary_hue` to any Gradio color:
+
+<CodeGroup>
+```python Blue theme
+THEME = gr.themes.Soft(primary_hue="blue", secondary_hue="slate")
+```
+
+```python Green theme
+THEME = gr.themes.Soft(primary_hue="green", secondary_hue="slate")
+```
+
+```python Purple theme
+THEME = gr.themes.Soft(primary_hue="purple", secondary_hue="slate")
+```
+</CodeGroup>
+
+## Customizing example questions
+
+Edit the `EXAMPLE_QUESTIONS` dictionary in `scripts/demo_step3_app.py`:
+
+```python
+EXAMPLE_QUESTIONS = {
+    "🏙️ CityHack — Boston 311 Services": [
+        "Your first custom question?",
+        "Your second custom question?",
+        "Your third custom question?",
+    ],
+    # ... other tracks
+}
+```
+
+## Performance tips
+
+<Tip>
+  **Pre-warm the app** by launching it once and clicking through each track before presenting. This downloads the embedding model and caches all indices.
+</Tip>
+
+<Note>
+  **First track load** builds the index and may take 2-5 seconds. Subsequent loads of the same track are instant (cached). Switching between tracks after they've been loaded is also instant.
+</Note>
+
+## Deployment options
+
+### Local only (default)
+
+The app runs entirely on `localhost:7860`. No data ever leaves the machine.
+
+### Temporary public URL
+
+```bash
+python scripts/demo_step3_app.py --share
+```
+
+Gradio provides a temporary public URL (valid ~72 hours) via tunneling. Useful for letting judges or remote participants try the app.
+
+**Example output:**
+```
+Running on local URL:  http://127.0.0.1:7860
+Running on public URL: https://abc123def456.gradio.live
+
+This share link expires in 72 hours.
+```
+
+<Warning>
+  The public URL routes traffic through Gradio's servers, but your data and model still run locally. Only the UI is tunneled.
+</Warning>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Browser doesn't open automatically">
+    Navigate manually to `http://localhost:7860` in your browser.
+  </Accordion>
+
+  <Accordion title="Port already in use">
+    Kill the existing process or change the port:
+    ```bash
+    python scripts/demo_step3_app.py --port 8080
+    ```
+  </Accordion>
+
+  <Accordion title="App is unresponsive">
+    Ensure at least 8 GB RAM is available. Llama 3.1 8B uses ~4-5 GB. Close other applications to free memory.
+  </Accordion>
+
+  <Accordion title="Track switching doesn't update header">
+    This is a known issue in Gradio 5.x. The fix is to ensure the `track_selector.change()` event is properly wired:
+    ```python
+    track_selector.change(
+        fn=on_track_change,
+        inputs=[track_selector],
+        outputs=[header, examples.dataset],
+    )
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+Now that you've seen the civic data web app, move to [Step 4: Bring Your Own Data](/tutorial/step4-byod) to plug in your own files and start querying them.

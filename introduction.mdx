@@ -1,0 +1,157 @@
+---
+title: Introduction
+description: Build a complete civic AI application with open source tools in minutes
+---
+
+<img
+  className="block dark:hidden"
+  src="/images/hero-light.svg"
+  alt="CivicHacks Demo Hero"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/hero-dark.svg"
+  alt="CivicHacks Demo Hero"
+/>
+
+## Build civic AI applications with open source tools
+
+This demo toolkit proves that open source AI is **free, powerful, and accessible** to anyone with a laptop. Build a complete civic AI application that analyzes real city data—running entirely on your machine with zero API costs.
+
+Originally created for CivicHacks 2026 at Boston University, this project demonstrates how to:
+
+- Run GPT-4-class AI models locally using Ollama
+- Connect AI to real civic datasets using Retrieval Augmented Generation (RAG)
+- Build a polished web application with Gradio
+- Analyze your own data with zero configuration
+
+<Note>
+  All processing happens locally on your machine. No data ever leaves your laptop. No API keys required.
+</Note>
+
+## What you'll build
+
+In three progressive steps, you'll create a working civic AI assistant:
+
+<Steps>
+  <Step title="Local AI inference">
+    Run Llama 3.1 locally and prove that AI works on your laptop for free—no cloud required.
+  </Step>
+  <Step title="RAG with civic data">
+    Connect your AI to real Boston civic datasets covering environment, 311 services, public schools, and criminal justice.
+  </Step>
+  <Step title="Web application">
+    Wrap everything in a shareable web interface with chat, track switching, and cost comparisons.
+  </Step>
+  <Step title="Bring your own data">
+    Drop in any PDF, text file, or dataset and start asking questions immediately.
+  </Step>
+</Steps>
+
+## Key features
+
+<CardGroup cols={2}>
+  <Card title="100% local and free" icon="laptop">
+    Everything runs on your machine. Zero API costs—just fractions of a cent in electricity per query.
+  </Card>
+  <Card title="Real civic datasets" icon="city">
+    Includes synthetic but realistic Boston data for environment, 311 services, schools, and justice reform.
+  </Card>
+  <Card title="Production-ready stack" icon="layer-group">
+    Built with Ollama, LlamaIndex, and Gradio—the same tools used in enterprise AI applications.
+  </Card>
+  <Card title="Bring your own data" icon="file-import">
+    Works with your PDFs, text files, and CSVs out of the box. No code changes needed.
+  </Card>
+</CardGroup>
+
+## The complete stack
+
+This demo uses four open source layers, all running locally:
+
+```
+┌─────────────────────────────────────────────┐
+│              Gradio Web UI                  │  ← Browser-based chat interface
+├─────────────────────────────────────────────┤
+│          LlamaIndex RAG Pipeline            │  ← Retrieval Augmented Generation
+│   ┌──────────────┐    ┌──────────────────┐ │
+│   │ Vector Index  │    │ HuggingFace      │ │
+│   │ (in-memory)   │    │ Embeddings       │ │
+│   └──────────────┘    └──────────────────┘ │
+├─────────────────────────────────────────────┤
+│            Ollama + Llama 3.1               │  ← Local LLM inference
+├─────────────────────────────────────────────┤
+│            Civic Data Files                 │  ← .txt datasets per track
+└─────────────────────────────────────────────┘
+```
+
+<Warning>
+  **Apple Silicon Macs** (M1/M2/M3/M4) are ideal for this demo—unified memory handles Llama 3.1 8B at 15-25 tokens/second. CPU-only machines still work at ~3-5 tokens/second.
+</Warning>
+
+## What the demo covers
+
+The project includes four hackathon tracks with real civic data patterns:
+
+| Track | Dataset | Focus Area |
+|-------|---------|------------|
+| **EcoHack** | Boston Environment | Air quality, heat islands, climate resilience |
+| **CityHack** | Boston 311 Services | Service requests, equity gaps, response times |
+| **EduHack** | Boston Public Schools | Achievement gaps, absenteeism, tech access |
+| **JusticeHack** | MA Criminal Justice | Incarceration disparities, policing data |
+
+## Quick start
+
+Get the demo running in about 10 minutes:
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get the demo running in 10 minutes
+  </Card>
+  <Card title="Installation" icon="download" href="/installation">
+    Detailed setup instructions and requirements
+  </Card>
+</CardGroup>
+
+## Real-world cost comparison
+
+Every query shows you the actual cost:
+
+```bash
+⏱️  12.3s · 142 tokens · 11 tok/s
+⚡ Local: $0.000009 (0.051 Wh @ 15W) · GPT-4o: $0.0017 (189x more)
+```
+
+The same query that costs fractions of a cent locally would cost nearly 200x more on GPT-4o's API.
+
+## What you'll learn
+
+This demo teaches you how to:
+
+- Set up and run local LLMs with Ollama
+- Build RAG pipelines with LlamaIndex
+- Create web UIs with Gradio
+- Work with civic datasets
+- Compare local vs. cloud AI costs
+- Deploy AI applications without cloud dependencies
+
+<Note>
+  The civic datasets are **synthetic but realistic**—fabricated for demonstration using real-world patterns. For production apps, use real data from [data.boston.gov](https://data.boston.gov), [mass.gov/open-data](https://mass.gov/open-data), or [data.gov](https://data.gov).
+</Note>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Run the quickstart" icon="play" href="/quickstart">
+    Get the demo running in 10 minutes
+  </Card>
+  <Card title="Read installation guide" icon="book" href="/installation">
+    Detailed setup and requirements
+  </Card>
+  <Card title="Explore the architecture" icon="diagram-project" href="/reference/architecture">
+    Understand how the stack works
+  </Card>
+  <Card title="View on GitHub" icon="github" href="https://github.com/holzerjm/civichacks-demo">
+    Clone the repository and start building
+  </Card>
+</CardGroup>

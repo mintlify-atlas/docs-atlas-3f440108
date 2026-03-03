@@ -1,0 +1,320 @@
+---
+title: Hackathon tips and best practices
+description: Advice from people who've built (and judged) a lot of hackathon projects
+---
+
+## Strategy
+
+<CardGroup cols={2}>
+  <Card title="Start with the demo code" icon="code">
+    Fork this repo and modify it — don't start from scratch. You'll have a working app in 10 minutes instead of spending 3 hours on setup.
+  </Card>
+  <Card title="Pick one track, go deep" icon="bullseye">
+    A focused project that solves one problem well beats a scattered project that barely works.
+  </Card>
+  <Card title="Demo > Features" icon="star">
+    Judges spend 3-5 minutes with your project. One polished feature that works flawlessly is worth more than ten half-finished ones.
+  </Card>
+  <Card title="Tell a story" icon="book">
+    Open with the problem, show the data, demo the solution. The best projects make you *feel* the impact.
+  </Card>
+</CardGroup>
+
+## Technical tips
+
+### Use the `--all` flag
+
+<Tip>
+Steps 4 and 5 support loading multiple data files into one index with the `--all` flag. This lets you do cross-file analysis — "compare the environmental data with the school data" — which is very impressive in demos.
+</Tip>
+
+```bash
+python scripts/demo_step4_byod.py --all
+```
+
+### Show the cost comparison
+
+Every query in our demo shows local cost vs. cloud cost. This makes the open source story concrete and memorable.
+
+```
+⚡ Local: $0.000009 (0.051 Wh @ 15W) · GPT-4o: $0.0017 (189x more)
+```
+
+### Keep your model small
+
+Llama 3.2:3b runs 3x faster than Llama 3.1 8B and is "good enough" for most demos. Speed matters more than quality in a live presentation.
+
+```bash
+# Try the faster 3B model
+ollama pull llama3.2:3b
+
+# Update your script to use it
+python scripts/demo_step3_app.py --model llama3.2:3b
+```
+
+### Pre-load everything
+
+<Warning>
+Run every command once before your demo. The first run downloads models and caches embeddings — you don't want to wait 2 minutes on stage.
+</Warning>
+
+```bash
+# Pre-warm all the steps
+python scripts/demo_step1_ollama.py
+python scripts/demo_step2_rag.py city
+python scripts/demo_step3_app.py  # Start it, verify it loads, then Ctrl+C
+```
+
+### Git commit early and often
+
+Losing code at 2am because you forgot to save is the most preventable hackathon disaster.
+
+```bash
+# Commit your work frequently
+git add .
+git commit -m "Add environmental data analysis feature"
+git push
+```
+
+## Presentation tips
+
+<AccordionGroup>
+  <Accordion title="Have a backup" icon="life-ring">
+    Take a screenshot or screen recording of your app working. If something breaks during the demo, show the recording.
+    
+    **How to record:**
+    - macOS: `Cmd+Shift+5` for screen recording
+    - Windows: `Win+G` for Game Bar recording
+    - Linux: Use OBS Studio or SimpleScreenRecorder
+    
+    Record a full demo run the night before, including:
+    - Loading the app
+    - Asking 2-3 example questions
+    - Showing the results
+    
+    Save it in your project folder and have it ready to play.
+  </Accordion>
+  
+  <Accordion title="Make the text BIG" icon="magnifying-glass-plus">
+    Judges and audiences can't read 12pt font on a projector. Use `Cmd+Plus` (macOS) or `Ctrl+Plus` (Windows/Linux) in your terminal and browser.
+    
+    **Recommended sizes:**
+    - Terminal: 18-24pt font
+    - Browser: Zoom to 150-200%
+    - Code editor: 16-20pt font
+    
+    Test visibility from the back of the room before presenting.
+  </Accordion>
+  
+  <Accordion title="Name your project" icon="tag">
+    "Our CityHack AI assistant" is more memorable than "our demo_step3 modification."
+    
+    **Good project names:**
+    - CivicAsk — AI for 311 data
+    - EquityLens — School equity analyzer
+    - GreenBoston — Environmental justice tool
+    - JusticeTracker — Criminal justice data explorer
+    
+    **Tips:**
+    - Keep it short (1-2 words)
+    - Make it descriptive
+    - Avoid generic names like "AI Assistant"
+    - Check if the domain/GitHub repo name is available
+  </Accordion>
+  
+  <Accordion title="Practice your pitch" icon="bullhorn">
+    You typically have 3-5 minutes to present. Practice your pitch out loud and time it.
+    
+    **Structure:**
+    1. **The problem** (30 seconds) — What civic issue are you addressing?
+    2. **The data** (30 seconds) — What data sources did you use?
+    3. **The demo** (2 minutes) — Show it working live
+    4. **The impact** (30 seconds) — Who benefits and how?
+    5. **Q&A** (1 minute) — Answer judge questions
+    
+    Don't spend 2 minutes explaining the tech stack. Show the impact.
+  </Accordion>
+  
+  <Accordion title="Prepare for common questions" icon="question">
+    Judges often ask the same questions. Have answers ready:
+    
+    **"How is this different from ChatGPT?"**
+    - It runs locally (no data leaves the machine)
+    - It's grounded in real civic data (no hallucinations)
+    - It costs fractions of a cent per query
+    - It's fully open source and customizable
+    
+    **"Can this scale to other cities?"**
+    - Yes! The same code works with any city's open data
+    - Just swap the data files and update the prompts
+    - Already tested with Boston, but works nationwide
+    
+    **"What's next for this project?"**
+    - Deploy to Hugging Face Spaces for public access
+    - Add more data sources (transit, housing, health)
+    - Build a mobile interface
+    - Partner with [specific organization]
+  </Accordion>
+</AccordionGroup>
+
+## Time management
+
+<Steps>
+  <Step title="Hours 0-2: Setup and exploration">
+    - Fork the demo repo
+    - Install dependencies and pre-warm models
+    - Explore the civic datasets
+    - Pick your track and focus area
+  </Step>
+  
+  <Step title="Hours 2-6: Core development">
+    - Customize the data (add new datasets or clean existing ones)
+    - Modify prompts for your specific use case
+    - Build one polished feature
+    - Test thoroughly
+  </Step>
+  
+  <Step title="Hours 6-10: Polish and extras">
+    - Improve the UI (better styling, clearer labels)
+    - Add data visualizations if relevant
+    - Write clear documentation
+    - Create a README with screenshots
+  </Step>
+  
+  <Step title="Hours 10-12: Presentation prep">
+    - Record a backup demo video
+    - Practice your pitch
+    - Prepare slides (optional, but helpful)
+    - Test on the presentation setup
+  </Step>
+</Steps>
+
+<Warning>
+Don't code until the last hour. You need time to prepare your presentation. A mediocre project with a great demo beats a great project that doesn't work on stage.
+</Warning>
+
+## What judges look for
+
+### Impact
+
+Does this solve a real civic problem? Who benefits?
+
+<Tip>
+Ground your project in a specific community need. "This helps non-English speakers access 311 services" is stronger than "This analyzes 311 data."
+</Tip>
+
+### Technical execution
+
+Does it work? Is the implementation solid?
+
+<Tip>
+One feature that works perfectly beats five features that crash. Judges want to see technical competence, not feature count.
+</Tip>
+
+### Innovation
+
+What's new or clever about your approach?
+
+<Tip>
+Combining datasets in novel ways is often more impressive than fancy AI techniques. "We overlaid heat island data with school locations to find students at risk" shows creative thinking.
+</Tip>
+
+### Presentation
+
+Can you clearly communicate your project's value?
+
+<Tip>
+Tell a story. Start with a real person affected by the problem. Show how your tool helps them. End with the impact.
+</Tip>
+
+### Open source and reproducibility
+
+Can others build on your work?
+
+<Tip>
+Document everything. Clear README, requirements.txt, sample data, usage instructions. Make it easy for others to run your project.
+</Tip>
+
+## Common mistakes to avoid
+
+<AccordionGroup>
+  <Accordion title="Scope creep" icon="arrows-maximize">
+    **The problem:** Trying to build too many features and finishing none.
+    
+    **The solution:** Pick ONE core feature and make it perfect. Add extras only if you have time.
+    
+    **Example:**
+    - Bad: "Our app does 311 analysis, school equity, environmental justice, AND housing"
+    - Good: "Our app finds 311 service gaps for non-English speakers"
+  </Accordion>
+  
+  <Accordion title="Starting from scratch" icon="file-circle-xmark">
+    **The problem:** Spending hours on boilerplate instead of building your idea.
+    
+    **The solution:** Fork the demo code, use templates, leverage existing tools.
+    
+    **Time saved:**
+    - Starting from scratch: 3-4 hours just to get RAG working
+    - Forking demo: 10 minutes to working app
+  </Accordion>
+  
+  <Accordion title="Ignoring data quality" icon="triangle-exclamation">
+    **The problem:** Feeding messy data to AI and getting garbage outputs.
+    
+    **The solution:** Clean and validate your data first. Check for missing values, inconsistent formats, and outliers.
+    
+    **Quick checks:**
+    - Load the data in pandas and run `.info()` and `.describe()`
+    - Look for null values: `df.isnull().sum()`
+    - Check for duplicates: `df.duplicated().sum()`
+  </Accordion>
+  
+  <Accordion title="No error handling" icon="bug">
+    **The problem:** App crashes when judges try unexpected inputs.
+    
+    **The solution:** Add basic error handling and validation.
+    
+    **Example:**
+    ```python
+    try:
+        response = query_engine.query(question)
+        return response.response
+    except Exception as e:
+        return f"Sorry, I encountered an error: {str(e)}"
+    ```
+  </Accordion>
+  
+  <Accordion title="Forgetting to test the demo" icon="vial">
+    **The problem:** Something breaks on stage that worked fine on your laptop.
+    
+    **The solution:** Test your entire demo flow on the presentation setup.
+    
+    **Test checklist:**
+    - [ ] App loads in a fresh browser
+    - [ ] Example questions all work
+    - [ ] Text is readable from the back
+    - [ ] Network/wifi issues don't break it
+    - [ ] Backup demo video is ready
+  </Accordion>
+</AccordionGroup>
+
+## Winning mindset
+
+<Card title="Focus on impact, not complexity" icon="heart">
+The best hackathon projects aren't the most technically complex — they're the ones that clearly solve a real problem for real people.
+
+A simple RAG app that helps non-English speakers navigate 311 services is more valuable than a complex multi-agent system that no one understands.
+
+Judges want to see:
+- Clear problem statement
+- Real data backing it up
+- Working solution (even if simple)
+- Measurable impact
+- Path to deployment
+
+You don't need fancy AI techniques. You need to help people.
+</Card>
+
+<Note>
+Remember: Open source AI means you can build powerful civic tools for almost zero cost. That's the revolution. Use it to make your community better.
+</Note>

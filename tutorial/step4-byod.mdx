@@ -1,0 +1,375 @@
+---
+title: 'Step 4: Bring Your Own Data'
+description: 'Plug in any file and start querying it with AI instantly — no code changes needed'
+---
+
+## Overview
+
+This step lets you plug in any data file and start querying it with AI instantly. You can load a single file or multiple files at once for cross-file exploration — no code changes, no configuration.
+
+**Duration:** ~3-5 minutes (interactive)
+
+**What you'll do:**
+- Drop files into the `userdata/` directory or provide a file path
+- Analyze file metadata (type, size, word count, content preview)
+- Build a vector index and get an AI summary
+- Ask questions about your data in an interactive Q&A loop
+- See cost comparison on every query
+
+## Prerequisites
+
+Complete [Step 2: RAG with Civic Data](/tutorial/step2-rag) first, then install the file reader:
+
+```bash
+pip install llama-index-readers-file
+```
+
+## Supported file types
+
+| Extension | Type | Notes |
+|-----------|------|-------|
+| `.txt` | Plain text | Simplest option, works everywhere |
+| `.pdf` | PDF document | Requires `llama-index-readers-file` (already installed) |
+| `.csv` | CSV spreadsheet | Read as text content |
+| `.docx` | Word document | Requires `llama-index-readers-file` |
+
+<Note>
+  For PDFs: Text-based PDFs work. Image-only or encrypted PDFs may not extract text successfully.
+</Note>
+
+## Running the script
+
+### Auto-discovery from userdata/
+
+Drop files into the `userdata/` directory before running:
+
+```bash
+python scripts/demo_step4_byod.py
+```
+
+The script will:
+- **0 files found:** Prompt for a file path
+- **1 file found:** Automatically use that file
+- **2+ files found:** Show a numbered list to pick from (or type `a` to load all)
+
+### Load all files at once
+
+```bash
+python scripts/demo_step4_byod.py --all
+```
+
+Loads every supported file in `userdata/` into a single combined index, enabling cross-document questions like:
+- "Compare the findings across these reports"
+- "What themes are common across all the data?"
+- "Which document discusses budget constraints?"
+
+### With a specific file path
+
+```bash
+# With a text file
+python scripts/demo_step4_byod.py path/to/your/file.txt
+
+# With a PDF
+python scripts/demo_step4_byod.py ~/Downloads/report.pdf
+
+# With a CSV
+python scripts/demo_step4_byod.py ~/Documents/data.csv
+```
+
+### Use a different model
+
+```bash
+python scripts/demo_step4_byod.py myfile.txt --model phi3:mini
+```
+
+## Command-line options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `file` | *(auto-discover)* | Path to data file (positional, optional) |
+| `--all` | off | Load ALL files in `userdata/` into a single index for cross-file exploration |
+| `--model` | `llama3.1` | Ollama model to use (lets you try different models) |
+
+<Tip>
+  Use `--help` to see all options:
+  ```bash
+  python scripts/demo_step4_byod.py --help
+  ```
+</Tip>
+
+## Expected output
+
+<Steps>
+  <Step title="File analysis">
+    ```
+    ════════════════════════════════════════════════════════════
+      CIVICHACKS 2026 — Bring Your Own Data
+    ════════════════════════════════════════════════════════════
+
+    ⚙️  Configuring local AI stack...
+       Host: YOUR-HOSTNAME
+       Time: February 21, 2026 at 02:15:30 PM
+       Model: llama3.1 (via Ollama — running on YOUR-HOSTNAME)
+       Embeddings: all-MiniLM-L6-v2 (runs on CPU)
+
+    ────────────────────────────────────────────────────────────
+      📄 File Analysis
+    ────────────────────────────────────────────────────────────
+
+       File:      boston_budget_2026.pdf
+       Path:      /Users/attendee/Downloads/boston_budget_2026.pdf
+       Type:      PDF document
+       Size:      2.4 MB
+       Modified:  February 18, 2026
+
+       Content:   3 document(s), 45,230 characters, ~8,120 words
+
+       Preview:
+       "CITY OF BOSTON FISCAL YEAR 2026 OPERATING BUDGET..."
+
+    ────────────────────────────────────────────────────────────
+    ```
+  </Step>
+
+  <Step title="Index building">
+    ```
+    🔍 Building vector index (this is the 'RAG' magic)...
+       Index built in 2.3s
+    ```
+  </Step>
+
+  <Step title="AI summary">
+    ```
+    ────────────────────────────────────────────────────────────
+      🤖 AI Summary of: boston_budget_2026.pdf
+    ────────────────────────────────────────────────────────────
+
+    [Streamed AI response covering:
+     1. What the document is about (topic and scope)
+     2. Key data points or findings (citing specific numbers)
+     3. Three questions someone might want to ask]
+
+    ⏱️  8.4s · ~185 tokens
+    ⚡ Local: $0.000010 (0.035 Wh @ 15W) · GPT-4o: $0.0023 (230x more)
+    ```
+  </Step>
+
+  <Step title="Interactive Q&A">
+    ```
+    ════════════════════════════════════════════════════════════
+      💬 Interactive Q&A — Ask anything about your data
+         Type 'quit' to end | 'help' for commands
+    ════════════════════════════════════════════════════════════
+
+      [You] >> What are the biggest budget increases this year?
+
+    ────────────────────────────────────────────────────────────
+      💬 Question: What are the biggest budget increases this year?
+    ────────────────────────────────────────────────────────────
+
+      🤖 Answer:
+
+    [Streamed AI answer grounded in the document data]
+
+    ⏱️  7.1s · ~142 tokens
+    ⚡ Local: $0.000007 (0.029 Wh @ 15W) · GPT-4o: $0.0018 (257x more)
+
+      [You] >> quit
+
+    ════════════════════════════════════════════════════════════
+      ✅ Session complete — 1 question answered
+         All processing done locally on YOUR-HOSTNAME.
+         Zero data sent to the cloud.
+    ════════════════════════════════════════════════════════════
+    ```
+  </Step>
+</Steps>
+
+## Interactive commands
+
+| Command | Action |
+|---------|--------|
+| *(any question)* | Query the AI about your data |
+| `summary` | Re-generate the AI summary |
+| `help` | Show available commands |
+| `quit` / `exit` / `q` | End the session |
+
+## How it works
+
+The script performs these steps:
+
+<Steps>
+  <Step title="File discovery and validation">
+    - `find_userdata_files()` scans the `userdata/` directory for supported file types
+    - `validate_file()` resolves the path, checks extension and file size, handles drag-and-drop quote stripping
+    - Displays file metadata (type, size, modified date)
+  </Step>
+
+  <Step title="Load documents">
+    Uses LlamaIndex's `SimpleDirectoryReader` to load the file:
+
+    ```python
+    documents = SimpleDirectoryReader(input_files=[str(filepath)]).load_data()
+    ```
+
+    For PDFs, this extracts text content. For CSVs, reads as plain text.
+  </Step>
+
+  <Step title="Build vector index">
+    Same as Step 2, builds an in-memory vector index:
+
+    ```python
+    index = VectorStoreIndex.from_documents(documents)
+    query_engine = index.as_query_engine(streaming=True, similarity_top_k=3)
+    ```
+  </Step>
+
+  <Step title="Generate AI summary">
+    Queries the index with a summary prompt:
+
+    ```python
+    SUMMARY_PROMPT = (
+        "You are analyzing a document that was just loaded. "
+        "Provide a concise summary covering: "
+        "1) What this document is about (topic and scope), "
+        "2) Key data points or findings (cite specific numbers if present), "
+        "3) Three questions someone might want to ask about this data. "
+        "Keep it under 200 words."
+    )
+
+    response = query_engine.query(SUMMARY_PROMPT)
+    response.print_response_stream()
+    ```
+
+    For multiple files, uses a `MULTI_SUMMARY_PROMPT` variant.
+  </Step>
+
+  <Step title="Interactive Q&A loop">
+    Runs a REPL-style loop:
+
+    ```python
+    while True:
+        user_input = input("  [You] >> ").strip()
+        if user_input.lower() in ("quit", "exit", "q"):
+            break
+
+        response = query_engine.query(user_input)
+        response.print_response_stream()
+    ```
+
+    Each question is an independent RAG query with cost comparison.
+  </Step>
+</Steps>
+
+## Cross-file exploration with --all
+
+The `--all` flag loads every file into a single combined index:
+
+```bash
+python scripts/demo_step4_byod.py --all
+```
+
+**Example output:**
+```
+════════════════════════════════════════════════════════════
+  📂 Loading 3 files from userdata/
+════════════════════════════════════════════════════════════
+
+   📄 report_2024.pdf  (1.8 MB, PDF document)
+   📄 report_2025.pdf  (2.1 MB, PDF document)
+   📄 budget_analysis.txt  (45 KB, Plain text)
+
+   ──────────────────────────────────────────────────────────
+   Total:     8 document(s), 123,456 characters, ~22,345 words
+   Combined:  3.9 MB
+════════════════════════════════════════════════════════════
+```
+
+Now you can ask cross-document questions:
+- "What changed between the 2024 and 2025 reports?"
+- "Which document discusses staffing shortages?"
+- "What themes appear across all three files?"
+
+## File size limits
+
+<Warning>
+  Files larger than 10 MB will display a warning. Indexing may take longer, but it will work. Very large files (>100 MB) may run out of memory on machines with limited RAM.
+</Warning>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Error: Could not extract text from PDF">
+    The PDF may be:
+    - Image-based (scanned document) — use OCR first
+    - Encrypted/password-protected — remove protection first
+    - Corrupted — try re-downloading or exporting to a new PDF
+
+    Try converting to plain text first:
+    ```bash
+    pdftotext input.pdf output.txt
+    python scripts/demo_step4_byod.py output.txt
+    ```
+  </Accordion>
+
+  <Accordion title="Error: File is empty">
+    The file has 0 bytes. Check that the file actually contains content.
+  </Accordion>
+
+  <Accordion title="Error: Unsupported file type">
+    Only `.txt`, `.pdf`, `.csv`, `.docx` are supported. Convert other formats to one of these first.
+  </Accordion>
+
+  <Accordion title="No files found in userdata/">
+    Create the `userdata/` directory and drop files there:
+    ```bash
+    mkdir -p userdata
+    cp ~/Documents/myfile.pdf userdata/
+    python scripts/demo_step4_byod.py
+    ```
+  </Accordion>
+
+  <Accordion title="Response doesn't match file content">
+    Increase `similarity_top_k` to retrieve more chunks:
+    ```python
+    # Edit scripts/demo_step4_byod.py
+    query_engine = index.as_query_engine(streaming=True, similarity_top_k=5)
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Real-world use cases
+
+<CardGroup cols={2}>
+  <Card title="Budget analysis">
+    Load city budget PDFs and ask:
+    - "What are the biggest line items?"
+    - "How does this year compare to last year?"
+    - "Which departments saw cuts?"
+  </Card>
+
+  <Card title="Meeting notes">
+    Load DOCX meeting notes and ask:
+    - "What action items were assigned?"
+    - "What decisions were made?"
+    - "Who attended and what were the key topics?"
+  </Card>
+
+  <Card title="Data reports">
+    Load CSV or TXT data files and ask:
+    - "What are the key trends?"
+    - "Which metrics are concerning?"
+    - "What correlations exist?"
+  </Card>
+
+  <Card title="Research papers">
+    Load academic PDFs and ask:
+    - "What is the main finding?"
+    - "What methodology was used?"
+    - "What are the limitations?"
+  </Card>
+</CardGroup>
+
+## Next steps
+
+Now that you've used BYOD in the terminal, move to [Step 5: BYOD Web Application](/tutorial/step5-byod-app) to wrap this in a web interface with drag-and-drop file upload.

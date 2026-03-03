@@ -1,80 +1,288 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart
+description: Get the CivicHacks demo running on your laptop in 10 minutes
 ---
 
-## Get started in three steps
+## Get running in 10 minutes
 
-Get your documentation site running locally and make your first customization.
+Follow along during the workshop or use this as a starting point for your hackathon project. You can have everything running in about 10 minutes.
 
-### Step 1: Set up your local environment
+<Note>
+  **At the hackathon?** If wifi is slow, pair up with someone who already has the model downloaded. Ollama only needs to download once—after that everything runs offline.
+</Note>
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- Python 3.10 or higher
+- At least 8 GB of RAM (16 GB recommended)
+- 10 GB of free disk space
+- Reliable internet connection for initial download (~4.7 GB model)
+
+<Steps>
+
+<Step title="Clone the repository">
+  ```bash
+  git clone https://github.com/holzerjm/civichacks-demo.git
+  cd civichacks-demo
+  ```
+</Step>
+
+<Step title="Install Ollama and pull the model">
+  Choose your platform:
+
+  <CodeGroup>
+  ```bash macOS (Homebrew)
+  brew install ollama
+  ```
+
+  ```bash Linux
+  curl -fsSL https://ollama.com/install.sh | sh
+  ```
+
+  ```bash Windows
+  # Download the installer from ollama.com
+  ```
+  </CodeGroup>
+
+  Then pull the Llama 3.1 model:
+
+  ```bash
+  # This downloads ~4.7 GB — use the venue wifi
+  ollama pull llama3.1
+  ```
+
+  <Note>
+    The model downloads once and runs offline forever. If Ollama isn't running as a background service, start it with `ollama serve`.
+  </Note>
+</Step>
+
+<Step title="Set up Python and install dependencies">
+  Create a virtual environment and install the required packages:
+
+  <CodeGroup>
+  ```bash macOS / Linux
+  python3 -m venv .venv
+  source .venv/bin/activate
+  pip install --upgrade pip
+  pip install -r requirements.txt
+  ```
+
+  ```bash Windows
+  python3 -m venv .venv
+  .venv\Scripts\activate
+  pip install --upgrade pip
+  pip install -r requirements.txt
+  ```
+  </CodeGroup>
+
+  This installs:
+  - `llama-index` — RAG framework for connecting AI to data
+  - `llama-index-llms-ollama` — Ollama integration
+  - `llama-index-embeddings-huggingface` — Local embeddings (no API key needed)
+  - `llama-index-readers-file` — File readers for PDF, DOCX, and other formats
+  - `gradio` — Web UI framework
+</Step>
+
+<Step title="Run the demo steps">
+  Now you're ready to run the demo!
+
+  ### Step 1: Local AI in your terminal
+
+  ```bash
+  python scripts/demo_step1_ollama.py
+  ```
+
+  You'll see the AI generate a response in real-time, followed by cost comparison:
+
+  ```
+  ⏱️  12.3s · 142 tokens · 11 tok/s
+  ⚡ Local: $0.000009 (0.051 Wh @ 15W) · GPT-4o: $0.0017 (189x more)
+  ```
+
+  ### Step 2: Connect AI to civic data
+
+  Pick a track: `eco`, `city`, `edu`, or `justice`
+
+  ```bash
+  python scripts/demo_step2_rag.py city
+  ```
+
+  The AI will analyze real Boston 311 service data and answer questions about it.
+
+  ### Step 3: Launch the web app
+
+  ```bash
+  python scripts/demo_step3_app.py
+  ```
+
+  Opens at `http://localhost:7860` with a full chat interface, track selector, and example questions.
+
+  ### Step 4: Bring your own data (interactive)
+
+  Drop any file into the `userdata/` directory, then:
+
+  ```bash
+  # Auto-discover from userdata/
+  python scripts/demo_step4_byod.py
+
+  # Load ALL files in userdata/
+  python scripts/demo_step4_byod.py --all
+
+  # Use a specific file
+  python scripts/demo_step4_byod.py path/to/your/file.txt
+  ```
+
+  Supports `.txt`, `.pdf`, `.csv`, and `.docx` files.
+
+  ### Step 5: BYOD as a web app
+
+  ```bash
+  python scripts/demo_step5_byod_app.py
+  ```
+
+  Opens at `http://localhost:8861` with drag-and-drop file upload in the browser.
+</Step>
+
+</Steps>
+
+## What you just built
+
+You now have a working civic AI application that:
+
+- Runs a GPT-4-class model locally for free
+- Analyzes real civic datasets using RAG
+- Provides a shareable web interface
+- Works with any data you provide
+
+<CardGroup cols={2}>
+  <Card title="Swap the data" icon="swap">
+    Drop your own `.txt`, `.pdf`, or `.csv` files into `userdata/` and run Step 4
+  </Card>
+  <Card title="Change the model" icon="microchip">
+    Try `ollama pull llama3.2:3b` for faster responses or `ollama pull deepseek-r1:7b` for stronger reasoning
+  </Card>
+  <Card title="Make it yours" icon="code">
+    Fork the repo, change the prompts, add new tracks, build a hackathon project on top of it
+  </Card>
+  <Card title="Get help" icon="question">
+    Every script supports `--help` for full usage details
+  </Card>
+</CardGroup>
+
+## Understanding the output
+
+Each demo step shows you:
+
+| Output | Meaning |
+|--------|----------|
+| `12.3s` | Time to generate the response |
+| `142 tokens` | Number of tokens generated |
+| `11 tok/s` | Generation speed (Apple Silicon: 15-25, CPU-only: 3-5) |
+| `Local: $0.000009` | Actual electricity cost at 15W |
+| `GPT-4o: $0.0017` | What the same query would cost on GPT-4o API |
+| `189x more` | Cost multiplier for cloud vs. local |
+
+<Warning>
+  **First run is slower** because models need to load into memory and the embedding model (~80 MB) downloads on first use. Subsequent runs use the cache.
+</Warning>
+
+## Try different models
+
+Swap models to match your hardware:
+
+```bash
+# Smaller/faster model for limited hardware
+ollama pull phi3:mini          # 3.8B, runs on almost anything
+ollama pull llama3.2:3b        # 3B, very fast
+
+# Larger/better model if you have the RAM
+ollama pull llama3.1:70b       # Needs ~40GB RAM, incredible quality
+
+# Best for reasoning tasks
+ollama pull deepseek-r1:7b     # Strong reasoning, MIT license
+```
+
+Then use `--model` flag with any script:
+
+```bash
+python scripts/demo_step4_byod.py --model phi3:mini
+python scripts/demo_step5_byod_app.py --model deepseek-r1:7b
+```
+
+## Command-line options
+
+All scripts support `--help` to see available options:
+
+```bash
+python scripts/demo_step1_ollama.py --help
+python scripts/demo_step2_rag.py --help
+python scripts/demo_step3_app.py --help
+python scripts/demo_step4_byod.py --help
+python scripts/demo_step5_byod_app.py --help
+```
+
+### Common options
+
+| Script | Options |
+|--------|----------|
+| `demo_step2_rag.py` | `<track>` (eco/city/edu/justice), `<question_num>` (1-3), `--all` |
+| `demo_step3_app.py` | `--port <port>`, `--share` |
+| `demo_step4_byod.py` | `<file_path>`, `--all`, `--model <model_name>` |
+| `demo_step5_byod_app.py` | `--port <port>`, `--model <model_name>`, `--share` |
+
+## Troubleshooting
 
 <AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
+  <Accordion title="Ollama isn't responding">
+    Check if Ollama is running:
+
+    ```bash
+    ollama list
+    ```
+
+    If not, start it:
+
+    ```bash
+    ollama serve
+    ```
   </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
+
+  <Accordion title="The model is slow">
+    - CPU inference for 8B models: expect 3-8 tokens/second (still fine for demos)
+    - Make sure no other heavy applications are competing for memory
+    - Try a smaller model: `ollama pull llama3.2:3b`
+  </Accordion>
+
+  <Accordion title="Embedding model download is slow">
+    The HuggingFace embedding model (`all-MiniLM-L6-v2`) downloads on first use (~80 MB). Run Step 2 at least once to cache it before presenting.
+  </Accordion>
+
+  <Accordion title="Gradio won't open in the browser">
+    Try specifying the browser:
+
+    ```bash
+    BROWSER=chrome python scripts/demo_step3_app.py
+    ```
+
+    Or open manually at `http://localhost:7860`
   </Accordion>
 </AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
-
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Read the installation guide" icon="download" href="/installation">
+    Detailed setup instructions and hardware requirements
+  </Card>
+  <Card title="Understand the architecture" icon="diagram-project" href="/reference/architecture">
+    Learn how the RAG pipeline works
+  </Card>
+  <Card title="Explore the datasets" icon="database" href="/data/overview">
+    See what civic data is included
+  </Card>
+  <Card title="Customize your app" icon="wrench" href="/guides/swap-data">
+    Change prompts, add tracks, and deploy
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

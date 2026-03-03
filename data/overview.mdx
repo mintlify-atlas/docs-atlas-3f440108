@@ -1,0 +1,116 @@
+---
+title: Civic datasets overview
+description: Explore four realistic civic datasets covering Boston environment, 311 services, public schools, and Massachusetts criminal justice
+---
+
+The CivicHacks Demo includes four synthetic but realistic civic datasets that demonstrate how open source AI can analyze real-world municipal data. Each dataset is designed to support a specific hackathon track and contains rich, structured information perfect for RAG-based queries.
+
+## Available datasets
+
+<CardGroup cols={2}>
+  <Card title="EcoHack: Boston environment" icon="leaf" href="/data/ecohack">
+    Air quality, heat islands, water quality, climate resilience, and environmental justice metrics
+  </Card>
+  <Card title="CityHack: Boston 311 services" icon="city" href="/data/cityhack">
+    Service request analysis, geographic disparities, staffing, language access, and equity gaps
+  </Card>
+  <Card title="EduHack: Boston public schools" icon="school" href="/data/eduhack">
+    Achievement gaps, chronic absenteeism, technology access, staffing, and college readiness
+  </Card>
+  <Card title="JusticeHack: MA criminal justice" icon="scale-balanced" href="/data/justicehack">
+    Incarceration disparities, pretrial detention, recidivism, policing data, and legal representation
+  </Card>
+</CardGroup>
+
+## Data characteristics
+
+All datasets share these properties:
+
+- **Synthetic but realistic**: Fabricated for demonstration, but based on real-world patterns and plausible statistics
+- **Plain text format**: Stored as `.txt` files for easy loading and indexing
+- **Rich context**: Each contains specific neighborhoods, demographics, metrics, and equity considerations
+- **RAG-optimized**: Structured to work well with retrieval augmented generation queries
+- **Civic focus**: Designed to surface actionable insights about municipal services and social equity
+
+## Using the datasets
+
+Each dataset can be queried using the RAG pipeline in Step 2:
+
+```bash
+# Query the city track (311 services)
+python scripts/demo_step2_rag.py city
+
+# Run all three sample questions for the education track
+python scripts/demo_step2_rag.py edu --all
+
+# Ask a specific question (question 2) from the environment track
+python scripts/demo_step2_rag.py eco 2
+```
+
+<Tip>
+When the Gradio web app launches (Step 3), you can switch between all four datasets using the track selector dropdown. The header, description, and example questions update dynamically.
+</Tip>
+
+## Sample queries across datasets
+
+<AccordionGroup>
+  <Accordion title="Environment queries">
+    - Which Boston neighborhoods have the worst air quality and why?
+    - What are the biggest environmental justice concerns in this data?
+    - How is climate change specifically threatening Boston's coastline?
+  </Accordion>
+  
+  <Accordion title="311 services queries">
+    - Which neighborhoods have the longest 311 response times and what are the equity implications?
+    - What are the biggest service gaps for non-English speaking residents?
+    - What patterns suggest systemic inequity in city service delivery?
+  </Accordion>
+  
+  <Accordion title="Education queries">
+    - What are the most significant achievement gaps in Boston public schools?
+    - How does transportation affect student attendance and outcomes?
+    - What technology access barriers exist for students and teachers?
+  </Accordion>
+  
+  <Accordion title="Criminal justice queries">
+    - What racial disparities exist in pretrial detention in Massachusetts?
+    - How effective are reentry programs at reducing recidivism?
+    - What does the data reveal about policing patterns in Boston?
+  </Accordion>
+</AccordionGroup>
+
+## Data location
+
+All datasets are located in the `data/` directory:
+
+```
+data/
+├── ecohack_boston_environment.txt
+├── cityhack_boston_311.txt
+├── eduhack_boston_schools.txt
+└── justicehack_ma_justice.txt
+```
+
+## Bringing your own data
+
+While these datasets are designed for the demo, Steps 4 and 5 let you plug in your own civic data:
+
+- Drop `.txt`, `.pdf`, `.csv`, or `.docx` files into the `userdata/` directory
+- Run `demo_step4_byod.py` for interactive terminal-based exploration
+- Run `demo_step5_byod_app.py` for a web-based drag-and-drop interface
+
+See [Bring Your Own Data](/tutorial/step4-byod) for details.
+
+## Finding real civic data
+
+If you want to replace these synthetic datasets with real municipal data:
+
+| Source | URL | Coverage |
+|--------|-----|----------|
+| City of Boston Open Data | https://data.boston.gov | Boston-specific datasets |
+| Massachusetts Open Data | https://mass.gov/open-data | Statewide data |
+| Federal Open Data | https://data.gov | US federal datasets |
+
+<Info>
+Real civic datasets often require cleaning, normalization, and format conversion before they work well with RAG pipelines. The synthetic datasets in this demo are pre-formatted for optimal AI query performance.
+</Info>

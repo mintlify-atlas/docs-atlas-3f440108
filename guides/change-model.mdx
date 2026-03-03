@@ -1,0 +1,254 @@
+---
+title: Change the AI model
+description: Swap the Llama 3.1 model for different sizes, speeds, or capabilities
+---
+
+The demo uses Llama 3.1 8B by default, but you can easily switch to different models based on your hardware constraints or quality requirements.
+
+## Available model options
+
+Ollama provides a wide range of open source models. Here are recommended options:
+
+### Smaller/faster models
+
+Ideal for limited hardware or faster inference:
+
+| Model | Size | Speed | Use case |
+|-------|------|-------|----------|
+| `llama3.2:3b` | 3B | Very fast | Quick responses, limited hardware |
+| `phi3:mini` | 3.8B | Fast | General use on any laptop |
+| `gemma2:2b` | 2B | Very fast | Maximum speed, basic tasks |
+
+### Balanced models
+
+Good quality with reasonable resource requirements:
+
+| Model | Size | Speed | Use case |
+|-------|------|-------|----------|
+| `llama3.1` | 8B | Medium | Default - best balance (demo uses this) |
+| `llama3.2` | 8B | Medium | Latest version with improvements |
+| `mistral` | 7B | Medium | Strong general-purpose model |
+
+### Larger/better models
+
+Require more RAM but provide higher quality:
+
+| Model | Size | RAM needed | Use case |
+|-------|------|------------|----------|
+| `llama3.1:70b` | 70B | ~40GB | Best quality, needs powerful hardware |
+| `mixtral` | 47B | ~32GB | Strong reasoning, mixture of experts |
+
+### Specialized models
+
+Optimized for specific tasks:
+
+| Model | Size | Specialization |
+|-------|------|----------------|
+| `deepseek-r1:7b` | 7B | Strong reasoning tasks (MIT license) |
+| `codellama` | 7B-34B | Code generation and analysis |
+
+<Note>
+Apple Silicon Macs (M1/M2/M3/M4) handle 8B models beautifully at 15-25 tokens/second. CPU-only machines work fine at ~3-5 tokens/second.
+</Note>
+
+## Pull a new model
+
+Download models using Ollama before using them:
+
+<Steps>
+  <Step title="Pull the model">
+    Download your chosen model:
+    
+    ```bash
+    # Smaller/faster
+    ollama pull llama3.2:3b
+    ollama pull phi3:mini
+    
+    # Larger/better (requires more RAM)
+    ollama pull llama3.1:70b
+    
+    # Best for reasoning
+    ollama pull deepseek-r1:7b
+    ```
+    
+    <Tip>
+    Model downloads can be large (3-40GB). Use reliable wifi and expect several minutes for download.
+    </Tip>
+  </Step>
+  
+  <Step title="Verify the model">
+    Test that the model works:
+    
+    ```bash
+    ollama run llama3.2:3b "Say hello in 10 words or less"
+    ```
+  </Step>
+</Steps>
+
+## Update the scripts
+
+Once you've pulled a new model, update the scripts to use it:
+
+### Step 1: Basic local AI (demo_step1_ollama.py)
+
+<CodeGroup>
+```python Before
+stream = ollama.chat(
+    model="llama3.1",
+    messages=[{"role": "user", "content": PROMPT}],
+    stream=True,
+)
+```
+
+```python After
+stream = ollama.chat(
+    model="phi3:mini",  # Changed to faster model
+    messages=[{"role": "user", "content": PROMPT}],
+    stream=True,
+)
+```
+</CodeGroup>
+
+The model name appears around line 268 in `scripts/demo_step1_ollama.py`.
+
+### Step 2: RAG with civic data (demo_step2_rag.py)
+
+<CodeGroup>
+```python Before
+Settings.llm = Ollama(model="llama3.1", request_timeout=120.0)
+Settings.embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L6-v2")
+```
+
+```python After
+Settings.llm = Ollama(model="deepseek-r1:7b", request_timeout=120.0)
+Settings.embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L6-v2")
+```
+</CodeGroup>
+
+Update line 170 in `scripts/demo_step2_rag.py`.
+
+<Note>
+The embedding model (`all-MiniLM-L6-v2`) should generally stay the same - it's used for search, not generation.
+</Note>
+
+### Step 3: Web application (demo_step3_app.py)
+
+<CodeGroup>
+```python Before
+Settings.llm = Ollama(model="llama3.1", request_timeout=120.0)
+Settings.embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L6-v2")
+```
+
+```python After
+Settings.llm = Ollama(model="llama3.2:3b", request_timeout=120.0)
+Settings.embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L6-v2")
+```
+</CodeGroup>
+
+Update line 203-204 in `scripts/demo_step3_app.py`.
+
+### Step 4 & 5: BYOD scripts
+
+The BYOD scripts support a `--model` flag, so no code changes needed:
+
+```bash
+# Use a different model via command line
+python scripts/demo_step4_byod.py myfile.txt --model phi3:mini
+python scripts/demo_step5_byod_app.py --model deepseek-r1:7b
+```
+
+## Performance considerations
+
+### Hardware requirements
+
+| Component | 3B model | 8B model | 70B model |
+|-----------|----------|----------|----------|
+| RAM | 4GB+ | 8GB+ | 40GB+ |
+| GPU VRAM | Optional | Optional | Recommended 24GB+ |
+| Storage | 2GB | 5GB | 40GB |
+| Speed (CPU) | 8-15 tok/s | 3-8 tok/s | &lt;1 tok/s |
+| Speed (GPU) | 30-60 tok/s | 15-25 tok/s | 5-10 tok/s |
+
+<Tip>
+If you're doing a live demo and the model is too slow, you can:
+
+1. Pre-warm the model by running it once before presenting
+2. Use a smaller model for the demo
+3. Tell the audience the slowness demonstrates real-time local inference (turn it into a feature!)
+</Tip>
+
+### Timeout settings
+
+Larger models may need longer timeouts:
+
+```python
+# Increase timeout for slower models
+Settings.llm = Ollama(model="llama3.1:70b", request_timeout=300.0)  # 5 minutes
+```
+
+## Model selection guide
+
+Choose based on your priorities:
+
+<Steps>
+  <Step title="Optimize for speed">
+    If you need fast responses or have limited hardware:
+    
+    ```bash
+    ollama pull llama3.2:3b
+    ```
+    
+    Update scripts to use `model="llama3.2:3b"`
+  </Step>
+  
+  <Step title="Optimize for quality">
+    If you have powerful hardware and want best results:
+    
+    ```bash
+    ollama pull llama3.1:70b
+    ```
+    
+    Update scripts to use `model="llama3.1:70b"` and increase `request_timeout=300.0`
+  </Step>
+  
+  <Step title="Optimize for reasoning">
+    For complex analysis tasks:
+    
+    ```bash
+    ollama pull deepseek-r1:7b
+    ```
+    
+    Update scripts to use `model="deepseek-r1:7b"`
+  </Step>
+</Steps>
+
+## Check available models
+
+See what models you have downloaded:
+
+```bash
+# List all downloaded models
+ollama list
+
+# Output example:
+NAME              ID            SIZE    MODIFIED
+llama3.1:latest   42182419e950  4.7 GB  2 hours ago
+phi3:mini         64c1188f2485  2.4 GB  1 day ago
+```
+
+Remove unused models to free space:
+
+```bash
+ollama rm llama3.1:70b
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Swap in your own data" icon="database" href="/guides/swap-data">
+    Replace the demo datasets with your files
+  </Card>
+  <Card title="Customize the UI" icon="palette" href="/guides/customize-ui">
+    Modify the Gradio interface appearance
+  </Card>
+</CardGroup>

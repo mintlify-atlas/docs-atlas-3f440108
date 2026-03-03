@@ -1,0 +1,199 @@
+---
+title: EcoHack dataset
+description: Boston environmental quality data covering air quality, heat islands, water quality, climate resilience, and environmental justice
+---
+
+The **EcoHack dataset** (`ecohack_boston_environment.txt`) is a synthetic environmental quality report for Boston, Q3 2025. It contains detailed metrics on air quality, urban heat islands, water quality, waste management, climate resilience, and environmental justice impacts.
+
+## Dataset overview
+
+<Info>
+**File**: `data/ecohack_boston_environment.txt`  
+**Scope**: City of Boston Environmental Quality Report, Q3 2025  
+**Size**: ~20 lines, 8,100+ characters  
+**Format**: Plain text, structured report
+</Info>
+
+## Data sections
+
+<Tabs>
+  <Tab title="Air quality">
+    ### Air quality summary
+    
+    - Boston's AQI averaged **42 (Good)** during Q3 2025, a 7% improvement over Q3 2024
+    - 12 days exceeded the "Moderate" threshold (AQI > 100), concentrated in July heat wave
+    - **Roxbury** monitoring station: 15.3 µg/m³ PM2.5 (28% above citywide average)
+    - **East Boston**: 22 ppb NO2 near airport corridor (citywide avg: 14 ppb)
+    
+    <Info>
+    The data explicitly shows environmental justice communities face disproportionate air quality impacts.
+    </Info>
+  </Tab>
+  
+  <Tab title="Heat islands">
+    ### Urban heat island effect
+    
+    - Neighborhoods with &lt;15% tree canopy: **8-12°F hotter** than 30%+ canopy areas
+    - Most affected: Dorchester (11% canopy), Mattapan (13%), East Boston (9%)
+    - City goal: 35% canopy by 2035 requires planting ~120,000 new trees
+    
+    **Key insight**: Tree canopy coverage directly correlates with surface temperature disparities.
+  </Tab>
+  
+  <Tab title="Water quality">
+    ### Water quality and CSO events
+    
+    - Boston Harbor met EPA standards on **94% of testing days** (up from 89% in 2024)
+    - Combined sewer overflow (CSO) events increased **15%** due to August storms
+    - CSO discharge near Dorchester Bay and Charles River showed elevated E. coli for 2-4 days post-event
+    - Deer Island Treatment Plant: 370M gallons/day average, 1.2B gallons peak during storms
+  </Tab>
+  
+  <Tab title="Waste & climate">
+    ### Waste, recycling, and climate
+    
+    **Recycling metrics:**
+    - 28% contamination rate (plastic bags, food-soiled materials)
+    - 24% waste diverted from landfills
+    - Mattapan and Hyde Park: lowest participation (18% and 21%)
+    - Jamaica Plain composting pilot: 45% household participation
+    
+    **Climate resilience:**
+    - 1.5 feet sea level rise projected by 2050
+    - $80 billion in property at risk (East Boston, Seaport, Dorchester waterfront)
+    - 3 of 12 coastal resilience projects completed
+    - 47 miles of adapted shoreline planned, 8% completed
+  </Tab>
+  
+  <Tab title="Environmental justice">
+    ### Environmental justice metrics
+    
+    Communities designated as EJ populations experienced:
+    
+    - **35% more days** with poor air quality
+    - **2.4x higher** childhood asthma hospitalization rates
+    - **40% less** green space access per capita
+    - **3.1x higher** likelihood of living near contaminated sites
+    
+    **City response**: $12M allocated in FY2025 for EJ community improvements (60% increase over FY2024)
+  </Tab>
+</Tabs>
+
+## Sample queries
+
+Here are the three built-in queries for the EcoHack track:
+
+<CodeGroup>
+```bash Query 1: Air quality disparities
+python scripts/demo_step2_rag.py eco 1
+```
+
+```bash Query 2: Environmental justice
+python scripts/demo_step2_rag.py eco 2
+```
+
+```bash Query 3: Climate threats
+python scripts/demo_step2_rag.py eco 3
+```
+</CodeGroup>
+
+### Query 1: Which Boston neighborhoods have the worst air quality and why?
+
+This query surfaces:
+- Roxbury's elevated PM2.5 levels (15.3 µg/m³)
+- East Boston's NO2 concentrations near the airport
+- Heat wave impacts in July (12 days exceeding Moderate AQI)
+- The 28% disparity between Roxbury and citywide averages
+
+### Query 2: What are the biggest environmental justice concerns in this data?
+
+This query identifies:
+- 35% more poor air quality days in EJ communities
+- 2.4x higher childhood asthma rates
+- 40% less green space per capita
+- 3.1x proximity to contaminated sites
+- The $12M FY2025 funding increase
+
+### Query 3: How is climate change specifically threatening Boston's coastline?
+
+This query highlights:
+- 1.5 feet of sea level rise by 2050
+- $80 billion in at-risk property
+- Affected areas: East Boston, Seaport District, Dorchester waterfront
+- 47 miles of planned coastal adaptation (8% complete)
+- 3 of 12 resilience projects finished
+
+## Key metrics reference
+
+<AccordionGroup>
+  <Accordion title="Air quality metrics">
+    | Metric | Value | Benchmark |
+    |--------|-------|----------|
+    | Citywide AQI | 42 (Good) | 7% improvement YoY |
+    | Days exceeding Moderate | 12 | Concentrated in July |
+    | Roxbury PM2.5 | 15.3 µg/m³ | 28% above citywide |
+    | East Boston NO2 | 22 ppb | 57% above citywide (14 ppb) |
+  </Accordion>
+  
+  <Accordion title="Tree canopy coverage">
+    | Neighborhood | Canopy % | Temperature impact |
+    |--------------|----------|-------------------|
+    | East Boston | 9% | 8-12°F hotter |
+    | Dorchester | 11% | 8-12°F hotter |
+    | Mattapan | 13% | 8-12°F hotter |
+    | 30%+ canopy areas | 30%+ | Baseline |
+    | City goal (2035) | 35% | Requires 120K new trees |
+  </Accordion>
+  
+  <Accordion title="Environmental justice disparities">
+    | Impact | EJ community multiplier |
+    |--------|------------------------|
+    | Poor air quality days | +35% |
+    | Childhood asthma hospitalization | 2.4x |
+    | Green space access | -40% (less per capita) |
+    | Proximity to contaminated sites | 3.1x |
+    | FY2025 targeted funding | $12M (+60% YoY) |
+  </Accordion>
+</AccordionGroup>
+
+## Using this dataset in the web app
+
+When you select **EcoHack** in the Gradio app (Step 3), the interface displays:
+
+- **Header**: "🌿 EcoHack — Analyze Boston environmental quality, climate resilience, and environmental justice data"
+- **Example questions**: All three queries above as clickable examples
+- **Chat responses**: AI answers grounded in the specific metrics from this dataset
+
+<Tip>
+Try asking follow-up questions like "Which neighborhoods need the most tree planting?" or "What's causing the CSO increase?" to explore the data interactively.
+</Tip>
+
+## Querying from code
+
+Here's how the RAG pipeline loads and queries this dataset:
+
+```python
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
+from llama_index.llms.ollama import Ollama
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+
+# Configure local AI
+Settings.llm = Ollama(model="llama3.1", request_timeout=120.0)
+Settings.embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L6-v2")
+
+# Load the EcoHack dataset
+data_file = "data/ecohack_boston_environment.txt"
+documents = SimpleDirectoryReader(input_files=[data_file]).load_data()
+
+# Build vector index
+index = VectorStoreIndex.from_documents(documents)
+query_engine = index.as_query_engine(streaming=True, similarity_top_k=3)
+
+# Query
+response = query_engine.query(
+    "Which Boston neighborhoods have the worst air quality and why?"
+)
+response.print_response_stream()
+```
+
+See [Step 2: RAG with civic data](/tutorial/step2-rag) for the full implementation.
